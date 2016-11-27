@@ -5,16 +5,13 @@ import numpy as np
 import matplotlib.image as mpimg
 import re
 
-foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
-
 # assign a label to a patch
-def patch_to_label(patch):
+def patch_to_label(patch,foreground_threshold):
     df = np.mean(patch)
     if df > foreground_threshold:
         return 1
     else:
         return 0
-
 
 def mask_to_submission_strings(image_filename):
     """Reads a single image and outputs the strings that should go into the submission file"""

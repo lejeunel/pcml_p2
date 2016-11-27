@@ -1,0 +1,27 @@
+#+STARTUP: latexpreview
+#+LATEX_HEADER: \usepackage{bm}
+#+LATEX_HEADER: \usepackage{svg}
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \graphicspath{{pics/}}
+#+LATEX_HEADER: \usepackage[margin=1in]{geometry}
+#+LATEX_HEADER: \usepackage{algorithm}
+#+LATEX_HEADER: \usepackage{algpseudocode}
+#+LATEX_HEADER: \documentclass[10pt,conference,compsocconf]{IEEEtran}
+#+LATEX_CLASS: IEEEtran
+
+# Local Variables:
+# org-ref-default-bibliography: refs.bib
+# End:
+#
+#+TITLE: Group 97: Road Segmentation
+#+AUTHOR: Laurent Lejeune, Tatiana Fountoukidou, Guillaume de Montauzon
+#+OPTIONS: toc:nil        no default TOC at all
+* Litterature review
+** Road Segmentation in Aerial Images by Exploiting Road Vector Data cite:6602035 
+**  Morphological road segmentation in urban areas from high resolution satellite images cite:gaetano:inria-00618222 
+**  Connected Component-Based Technique for Automatic Extraction of Road Centerline in High Resolution Satellite Images cite:sujatha15_connec_compon_based_techn_autom 
+** Machine Learning Based Road Detection from High Resolution Imagery cite:2016ISPAr41B3..891L 
+
+\bibliographystyle{ieeetr}
+\bibliography{refs}
+\printbibliography

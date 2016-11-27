@@ -1,0 +1,25 @@
+\begin{thebibliography}{1}
+
+\bibitem{6602035}
+J.~Yuan and A.~M. Cheriyadat, ``Road segmentation in aerial images by
+  exploiting road vector data,'' in {\em 2013 Fourth International Conference
+  on Computing for Geospatial Research and Application}, pp.~16--23, July 2013.
+
+\bibitem{gaetano:inria-00618222}
+R.~Gaetano, J.~Zerubia, G.~Scarpa, and G.~Poggi, ``{Morphological road
+  segmentation in urban areas from high resolution satellite images},'' in {\em
+  {International Conference on Digital Signal Processing}}, (Corfu, Greece),
+  2011.
+
+\bibitem{sujatha15_connec_compon_based_techn_autom}
+C.~Sujatha and D.~Selvathi, ``Connected component-based technique for automatic
+  extraction of road centerline in high resolution satellite images,'' {\em J
+  Image Video Proc}, vol.~2015, no.~1, p.~8, 2015.
+
+\bibitem{2016ISPAr41B3..891L}
+Y.~{Lv}, G.~{Wang}, and X.~{Hu}, ``{Machine Learning Based Road Detection from
+  High Resolution Imagery},'' {\em ISPRS - International Archives of the
+  Photogrammetry, Remote Sensing and Spatial Information Sciences},
+  pp.~891--898, June 2016.
+
+\end{thebibliography}
