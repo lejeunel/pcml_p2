@@ -5,7 +5,7 @@ http://www.pyimagesearch.com/2015/07/20/install-opencv-3-0-and-python-3-4-on-ubu
 ##See report.pdf for litterature review
 ## Changelogs and other various things
 ##LL 27/11: Added DAISY feature descriptor (similar to SIFT) on RGB channels
-##LL 2/12: features extraction now follows the bag-of-visual-words procedure:
+##LL 2/12: Class rebalancing (oversampling of positive class). Also, features extraction now follows the bag-of-visual-words procedure:
 - dense-SIFT + HSV colors computation
 - PCA
 - K-means (codebook) 
