@@ -3,7 +3,53 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os,sys
 from PIL import Image
-from skimage.segmentation import slic
+import cv2
+from skimage import color
+from sklearn.metrics import pairwise_distances_argmin
+from sklearn.utils import shuffle
+from sklearn.cluster import KMeans
+#from skimage.segmentation import slic
+
+def recreate_image(codebook, labels, w, h):
+    """Recreate the (compressed) image from the code book & labels"""
+    d = codebook.shape[1]
+    image = np.zeros((w, h, d))
+    label_idx = 0
+    for i in range(w):
+        for j in range(h):
+            image[i][j] = codebook[labels[label_idx]]
+            label_idx += 1
+    return image
+
+def kmeans_img(img,n_clusters):
+    # Load Image and transform to a 2D numpy array.
+    w, h, d = original_shape = tuple(img.shape)
+    assert d == 3
+    image_array = np.reshape(img, (w * h, d))
+
+    #print("Fitting model on a small sub-sample of the data")
+    image_array_sample = shuffle(image_array, random_state=0)[:1000]
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(image_array_sample)
+
+    # Get labels for all points
+    #print("Predicting color indices on the full image (k-means)")
+    labels = kmeans.predict(image_array)
+    #print("done in %0.3fs." % (time() - t0))
+
+    codebook_random = shuffle(image_array, random_state=0)[:n_clusters + 1]
+    #print("Predicting color indices on the full image (random)")
+    labels_random = pairwise_distances_argmin(codebook_random,image_array, axis=0)
+
+    return recreate_image(kmeans.cluster_centers_, labels, w, h)
+
+def get_sift_densely(img,step=1):
+    sift = cv2.xfeatures2d.SIFT_create(sigma=2)
+    kpDense = [cv2.KeyPoint(x, y, step) for y in range(0, img.shape[0], step)  for x in range(0, img.shape[1], step)]
+    img = (color.rgb2gray(img)*255).astype(np.uint8)
+    kps,des = sift.compute(color.rgb2gray(img),kpDense)
+
+    return des
+
 
 def load_image(infilename):
     data = mpimg.imread(infilename)
@@ -108,3 +154,7 @@ def make_img_overlay(img, predicted_img):
     overlay = Image.fromarray(color_mask, 'RGB').convert("RGBA")
     new_img = Image.blend(background, overlay, 0.2)
     return new_img
+
+def PIL2array(img):
+    return np.array(img.getdata(),
+                    np.uint8).reshape(img.size[1], img.size[0], 4)
