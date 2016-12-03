@@ -3,12 +3,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os,sys
 from PIL import Image
+import sys
+sys.path.append('/usr/lib/python3.5/site-packages')
 import cv2
-from skimage import color
+from skimage import (color,feature,filters)
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
-#from skimage.segmentation import slic
+from scipy import ndimage
+
+def get_features(imgs,canny_sigma,sift_sigmas,grid_step):
+    #X_dt = np.asarray([ distance_transform_edge(color.rgb2gray(imgs[i]),edge_sigma=canny_sigma) for i in range(len(imgs))])
+    #X_dt = X_dt[:,::grid_step,::grid_step].reshape(-1,1)
+    X_sift = np.asarray([ get_sift_densely(imgs[i],step=grid_step,sigmas=sift_sigmas) for i in range(len(imgs))])
+    X_sift = X_sift.reshape(len(imgs)*X_sift.shape[1],-1)
+    X_rgb = np.asarray([ imgs[i] for i in range(len(imgs))])
+    X_rgb = X_rgb[:,::grid_step,::grid_step,:]
+    X_rgb = X_rgb.reshape(len(imgs)*X_rgb.shape[1]*X_rgb.shape[2],-1)
+    #return np.concatenate((X_sift,X_rgb,X_dt),axis=1)
+    return np.concatenate((X_sift,X_rgb),axis=1)
+
+def get_features_dt(imgs,canny_sigma,grid_step):
+    X_dt = np.asarray([ distance_transform_edge(color.rgb2gray(imgs[i]),edge_sigma=canny_sigma) for i in range(len(imgs))])
+    X_dt = X_dt[:,::grid_step,::grid_step].reshape(-1,1)
+    return X_dt
+
+def distance_transform_edge(img,edge_sigma=1):
+
+    edge_map = feature.canny(img,sigma=edge_sigma)
+    distance = np.zeros(edge_map.shape)
+    dt = ndimage.distance_transform_cdt(~edge_map,metric='taxicab')
+
+    return dt
 
 def recreate_image(codebook, labels, w, h):
     """Recreate the (compressed) image from the code book & labels"""
@@ -42,14 +68,25 @@ def kmeans_img(img,n_clusters):
 
     return recreate_image(kmeans.cluster_centers_, labels, w, h)
 
-def get_sift_densely(img,step=1):
-    sift = cv2.xfeatures2d.SIFT_create(sigma=2)
-    kpDense = [cv2.KeyPoint(x, y, step) for y in range(0, img.shape[0], step)  for x in range(0, img.shape[1], step)]
-    img = (color.rgb2gray(img)*255).astype(np.uint8)
-    kps,des = sift.compute(color.rgb2gray(img),kpDense)
+def get_sift_densely(img,step=1,sigmas=None):
 
-    return des
+    def do_it(img,step):
+        sift = cv2.xfeatures2d.SIFT_create(sigma=2)
+        kpDense = [cv2.KeyPoint(x, y, step) for y in range(0, img.shape[0], step)  for x in range(0, img.shape[1], step)]
+        img = (color.rgb2gray(img)*255).astype(np.uint8)
+        kps,des = sift.compute(color.rgb2gray(img),kpDense)
+        return des
 
+    if(sigmas is None): return do_it(img,step)
+    else:
+        des = list()
+        for i in range(len(sigmas)):
+            des.append(do_it(filters.gaussian(img,sigmas[i],multichannel=True),step))
+
+        res = np.asarray(des)
+        res = np.transpose(res,(1,2,0))
+
+        return res.reshape(res.shape[0],res.shape[1]*res.shape[2])
 
 def load_image(infilename):
     data = mpimg.imread(infilename)

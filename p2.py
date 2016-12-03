@@ -1,4 +1,4 @@
-from sklearn import (cluster,decomposition)
+from sklearn import (cluster,decomposition,preprocessing)
 import matplotlib.image as mpimg
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,12 +13,14 @@ import skimage.draw
 #Parameters
 n = 40 #Num of images for training
 #n = min(60, len(files)) # Load maximum 20 images
-grid_scale = 0.25 #keypoints are extracted every 1/grid_scale pixels
+grid_step = 4 #keypoints are extracted every 1/grid_scale pixels
 n_im_pca = 10 #Num of images for PCA
-n_components_pca = 50 #Num of components for PCA compression
-n_clusters_bow = 10 #Bag of words, num. of clusters
+n_components_pca = 60 #Num of components for PCA compression
+sift_sigmas = np.array([1, 2, 3])
+n_clusters_bow = 30 #Bag of words, num. of clusters
 patch_size = 16 # each patch is 16*16 pixels
 foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
+canny_sigma = 4 #sigma of gaussian filter prior to canny edge detector
 
 # Loaded a set of images
 root_dir = "training/"
@@ -26,7 +28,8 @@ root_dir = "training/"
 image_dir = root_dir + "images/"
 files = os.listdir(image_dir)
 print("Loading " + str(n) + " training images")
-imgs = [color.rgb2hsv(hp.load_image(image_dir + files[i])) for i in range(n)]
+#imgs = [color.rgb2hsv(hp.load_image(image_dir + files[i])) for i in range(n)]
+imgs = [hp.load_image(image_dir + files[i]) for i in range(n)]
 
 gt_dir = root_dir + "groundtruth/"
 print("Loading " + str(n) + " ground-truth images")
@@ -34,47 +37,49 @@ gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(n)]
 
 print('Image size = ' + str(imgs[0].shape[0]) + ',' + str(imgs[0].shape[1]))
 
-#SIFT and RGB features are extracted from n_im_pca images on a dense grid (grid_scale). PCA is then applied for dimensionality reduction.
-print('computing PCA on ' + str(n_im_pca) + ' images')
-print('computing features (SIFT and RGB)')
-X_sift = np.asarray([ hp.get_sift_densely(imgs[i],step=int(patch_size*grid_scale)) for i in range(n_im_pca)])
-X_sift = X_sift.reshape(n_im_pca*X_sift.shape[1],X_sift.shape[2])
-X_rgb = np.asarray([ transform.rescale(imgs[i],scale=grid_scale) for i in range(n_im_pca)])
-X_rgb = X_rgb.reshape(n_im_pca*X_rgb.shape[1]*X_rgb.shape[2],X_rgb.shape[3])
-X_pca = np.concatenate((X_sift,X_rgb),axis=1)
+#features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then applied for dimensionality reduction.
+print('Extracting features (SIFT, RGB, etc..)')
+X_pca = hp.get_features(imgs[0:n_im_pca],canny_sigma,sift_sigmas,grid_step)
+print('Extracting euclidean distance transform')
+X_dt = hp.get_features_dt(imgs[0:n_im_pca],canny_sigma,grid_step)
 
-print('Computing SVD with n_components = ' + str(n_components_pca))
-pca = decomposition.PCA()
+print('Scaling PCA input')
+scaler = preprocessing.StandardScaler().fit(X_pca)
+X_pca = scaler.transform(X_pca)
+
+print('Fitting PCA model with n_components = ' + str(n_components_pca))
+pca = decomposition.PCA(n_components_pca)
 pca.fit(X_pca)
 #Plot explained variance
-plt.figure(1, figsize=(4, 3))
-plt.clf()
-plt.axes([.2, .2, .7, .7])
+plt.figure()
 plt.plot(pca.explained_variance_, linewidth=2)
-plt.axis('tight')
 plt.xlabel('n_components')
 plt.ylabel('explained_variance_')
 plt.show()
-pca.n_components = n_components_pca
 X_pca_transf = pca.transform(X_pca)
+X_to_cluster = np.concatenate((X_pca_transf, X_dt),axis=1)
 
-
+import pdb; pdb.set_trace()
 print('Generating codebook on ' + str(n_im_pca) + ' images with ' + str(n_clusters_bow) + ' clusters')
-codebook, distortion = cluster.vq.kmeans(X_pca_transf, n_clusters_bow,thresh=1)
+codebook, distortion = cluster.vq.kmeans(X_to_cluster, n_clusters_bow,thresh=1)
 
 codes = list()
 print('Generating codes on ' + str(n) + ' images')
 for i in range(n):
-    im_shape = imgs[i].shape
-    this_im_sift = hp.get_sift_densely(imgs[i],step=1)
-    this_im = imgs[i].reshape(imgs[i].shape[0]*imgs[i].shape[1],imgs[i].shape[2])
-    this_x = np.concatenate((this_im_sift,this_im),axis=1)
-    this_x_transf = pca.transform(this_x)
-    code, dist = cluster.vq.vq(this_x_transf, codebook)
-    code = code.reshape(im_shape[0],im_shape[1])
+    sys.stdout.write('\r')
+    this_x_sift = hp.get_features([imgs[i]],canny_sigma,sift_sigmas,1)
+    this_x_dt = hp.get_features_dt([imgs[i]],canny_sigma,1)
+    this_x_sift = scaler.transform(this_x_sift)
+    this_x_transf = pca.transform(this_x_sift)
+    this_x = np.concatenate((this_x_transf,this_x_dt),axis=1)
+    code, dist = cluster.vq.vq(this_x, codebook)
+    code = code.reshape(imgs[0].shape[0],imgs[0].shape[1])
+    sys.stdout.write("%d/%d" % (i+1, n))
+    sys.stdout.flush()
     codes.append(code)
     #histogram_of_words, bin_edges = np.histogram(code,bins=range(codebook.shape[0] + 1),normed=True)
 
+import pdb; pdb.set_trace()
 hist_bow = list()
 print('Getting Bag-of-Visual-Words on patches of size ' + str(patch_size))
 hist_bins = n_components_pca
@@ -143,36 +148,39 @@ linreg = linear_model.LinearRegression()
 #linreg = linear_model.Ridge(alpha=1.0)
 linreg.fit(X, Y)
 
-my_classifier = my_svm #This points to one of {bdt,my_svm,logreg,linreg}
-# Predict on the training set
-Z = my_classifier.predict(X)
+for the_classifier in {linreg,logreg,my_svm,bdt}:
 
-thr_pred = 0.5
-#thr_pred = np.mean(Z)
-#thr_pred = 0
+    # Predict on the training set
+    Z = the_classifier.predict(X)
+    thr_pred = 0.5
+    #thr_pred = np.mean(Z)
+    #thr_pred = 0
 
-# Get non-zeros in prediction and grountruth arrays
-Z_pos = np.where(Z>=thr_pred)[0]
-Z_neg = np.where(Z<thr_pred)[0]
-Y_pos = np.nonzero(Y)[0]
-Y_neg = np.where(Y==0)[0]
+    # Get non-zeros in prediction and grountruth arrays
+    Z_pos = np.where(Z>=thr_pred)[0]
+    Z_neg = np.where(Z<thr_pred)[0]
+    Y_pos = np.nonzero(Y)[0]
+    Y_neg = np.where(Y==0)[0]
 
-TPR = len(list(set(Y_pos) & set(Z_pos))) / float(len(Z))
-FPR = len(list(set(Y_neg) & set(Z_pos))) / float(len(Z))
-print('Results with classifier: ' + my_classifier.__class__.__name__)
-print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+    TPR = len(list(set(Y_pos) & set(Z_pos))) / float(len(Z))
+    FPR = len(list(set(Y_neg) & set(Z_pos))) / float(len(Z))
+    print('Results with classifier: ' + the_classifier.__class__.__name__)
+    print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
 
+
+my_classifier = bdt
 # Run prediction on the img_idx-th image
 img_idx = 10
 the_img = imgs[img_idx]
+the_gt = gt_imgs[img_idx]
 
-im_shape = the_img.shape
-this_im_sift = hp.get_sift_densely(the_img,step=1)
-this_im = the_img.reshape(the_img.shape[0]*the_img.shape[1],the_img.shape[2])
-this_x = np.concatenate((this_im_sift,this_im),axis=1)
-this_x_transf = pca.transform(this_x)
-code, dist = cluster.vq.vq(this_x_transf, codebook)
-code = code.reshape(im_shape[0],im_shape[1])
+this_x_sift = hp.get_features([the_img],canny_sigma,sift_sigmas,1)
+this_x_dt = hp.get_features_dt([the_img],canny_sigma,1)
+this_x_sift = scaler.transform(this_x_sift)
+this_x_transf = pca.transform(this_x_sift)
+this_x = np.concatenate((this_x_transf,this_x_dt),axis=1)
+code, dist = cluster.vq.vq(this_x, codebook)
+code = code.reshape(the_img.shape[0],the_img.shape[1])
 
 code_patch = hp.img_crop(code, patch_size, patch_size)
 hist_bow = np.asarray([np.histogram(code_patch[i],bins=hist_bins)[0] for i in range(len(code_patch))])
@@ -187,9 +195,9 @@ w = gt_imgs[img_idx].shape[0]
 h = gt_imgs[img_idx].shape[1]
 predicted_im = hp.label_to_img(w, h, patch_size, patch_size, Zi)
 #img_overlay = hp.make_img_overlay(the_img, predicted_im)
-img_overlay = color.label2rgb(predicted_im,the_img)
+img_overlay = color.label2rgb(predicted_im,the_img,alpha=0.5)
 img_over_conc = hp.concatenate_images(img_overlay,color.gray2rgb(gt_imgs[img_idx]))
 fig1 = plt.figure(figsize=(10, 10)) # create a figure with the default size
 plt.imshow(img_over_conc, cmap='Greys_r');
-plt.title('Prediction. ' + my_classifier.__class__.__name__)
+plt.title('Pred of im ' + str(img_idx) + ' with ' +  my_classifier.__class__.__name__)
 plt.show()
