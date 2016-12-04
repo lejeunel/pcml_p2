@@ -28,7 +28,7 @@ plt.show()
 #Make submission
 masks_to_submission('submission_test.csv', *image_filenames)
 
-#Hough-lines extractor (didn't find it useful)
+#Hough-lines extractor 
 hough_lines = list()
 for i in range(n):
     im = color.rgb2gray(imgs[i])

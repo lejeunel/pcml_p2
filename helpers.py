@@ -6,35 +6,65 @@ from PIL import Image
 import sys
 sys.path.append('/usr/lib/python3.5/site-packages')
 import cv2
-from skimage import (color,feature,filters)
+from skimage import (color,feature,filters,draw)
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
 from scipy import ndimage
+from skimage.transform import (hough_line, hough_line_peaks,
+                               probabilistic_hough_line)
+from scipy import cluster
 
-def get_features(imgs,canny_sigma,sift_sigmas,grid_step):
-    #X_dt = np.asarray([ distance_transform_edge(color.rgb2gray(imgs[i]),edge_sigma=canny_sigma) for i in range(len(imgs))])
-    #X_dt = X_dt[:,::grid_step,::grid_step].reshape(-1,1)
-    X_sift = np.asarray([ get_sift_densely(imgs[i],step=grid_step,sigmas=sift_sigmas) for i in range(len(imgs))])
+def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step,return_kps=False):
+
+    X_sift = np.asarray([ get_sift_densely(imgs[i],step=grid_step,sigmas=sift_sigmas,mode='neighborhood',return_kps=False) for i in range(len(imgs))])
     X_sift = X_sift.reshape(len(imgs)*X_sift.shape[1],-1)
-    X_rgb = np.asarray([ imgs[i] for i in range(len(imgs))])
+
+    return X_sift
+
+def get_features_vq_colors(imgs,grid_step,codebook):
+
+    w = imgs[0].shape[1]
+    h = imgs[0].shape[0]
+    X_rgb = np.asarray([ recreate_image(codebook,cluster.vq.vq(imgs[i].reshape(w*h,-1), codebook)[0],w,h) for i in range(len(imgs))])
     X_rgb = X_rgb[:,::grid_step,::grid_step,:]
     X_rgb = X_rgb.reshape(len(imgs)*X_rgb.shape[1]*X_rgb.shape[2],-1)
-    #return np.concatenate((X_sift,X_rgb,X_dt),axis=1)
-    return np.concatenate((X_sift,X_rgb),axis=1)
+
+    return X_rgb
 
 def get_features_dt(imgs,canny_sigma,grid_step):
     X_dt = np.asarray([ distance_transform_edge(color.rgb2gray(imgs[i]),edge_sigma=canny_sigma) for i in range(len(imgs))])
     X_dt = X_dt[:,::grid_step,::grid_step].reshape(-1,1)
+    X_dt = (X_dt - np.mean(X_dt))/np.var(X_dt)
     return X_dt
 
 def distance_transform_edge(img,edge_sigma=1):
 
     edge_map = feature.canny(img,sigma=edge_sigma)
-    distance = np.zeros(edge_map.shape)
     dt = ndimage.distance_transform_cdt(~edge_map,metric='taxicab')
 
     return dt
+
+def distance_transform(mat,edge_sigma=1):
+
+    dt = ndimage.distance_transform_cdt(mat,metric='taxicab')
+
+    return dt
+
+def get_hough_feature(imgs,sig_canny=1,threshold=10, line_length=45,line_gap=3):
+    #Hough-lines extractor
+    hough_lines = list()
+    for i in range(len(imgs)):
+        im = color.rgb2gray(imgs[i])
+        hough_lines.append(np.zeros((im.shape[0],im.shape[1])))
+        edge = feature.canny(im,sigma=sig_canny)
+        lines = probabilistic_hough_line(edge, threshold=threshold, line_length=line_length,line_gap=line_gap)
+        for line in lines:
+            p0, p1 = line
+            line_idx = draw.line(p0[1], p0[0], p1[1], p1[0])
+            hough_lines[-1][line_idx] = 1
+
+    return hough_lines
 
 def recreate_image(codebook, labels, w, h):
     """Recreate the (compressed) image from the code book & labels"""
@@ -68,16 +98,44 @@ def kmeans_img(img,n_clusters):
 
     return recreate_image(kmeans.cluster_centers_, labels, w, h)
 
-def get_sift_densely(img,step=1,sigmas=None):
+def get_sift_neighborhood(img,center,subsampl_step,macro_length,sigma=1):
+    im_pad = np.pad(color.rgb2gray(img),int(macro_length*subsampl_step/2),mode='symmetric')
+    kpDense = [cv2.KeyPoint(x, y, subsampl_step ) for y in np.arange(center[1], center[1] + macro_length*subsampl_step + 1, subsampl_step) for x in np.arange(center[0], center[0] + macro_length*subsampl_step + 1, subsampl_step)]
+    sift = cv2.xfeatures2d.SIFT_create(sigma=sigma)
+    img = (color.rgb2gray(img)*255).astype(np.uint8)
+    kps,des = sift.compute(color.rgb2gray(img),kpDense)
+
+    return np.asarray(des).reshape(1,-1)
+
+def get_sift_densely(img,step=1,sigmas=None,mode='neighborhood',subsampl_step = 4,macro_length=2,return_kps=False):
 
     def do_it(img,step):
-        sift = cv2.xfeatures2d.SIFT_create(sigma=2)
+        sift = cv2.xfeatures2d.SIFT_create(sigma=1)
         kpDense = [cv2.KeyPoint(x, y, step) for y in range(0, img.shape[0], step)  for x in range(0, img.shape[1], step)]
         img = (color.rgb2gray(img)*255).astype(np.uint8)
         kps,des = sift.compute(color.rgb2gray(img),kpDense)
+        des = des/np.linalg.norm(des,axis=1).reshape(-1,1)
+        des[np.where(des >= 0.2)] = 0.2
+        des = des/np.linalg.norm(des,axis=1).reshape(-1,1)
+
         return des
 
-    if(sigmas is None): return do_it(img,step)
+    if((sigmas is None) and mode is not 'neighborhood'): return do_it(img,step)
+    if((sigmas is None) and mode is 'neighborhood'):
+        des = list()
+        this_des = do_it(img,1).reshape(img.shape[0],img.shape[1],-1)
+        centers = [(x,y) for y in np.arange(0, img.shape[0], step)  for x in np.arange(0, img.shape[1], step)]
+        for i in range(len(centers)):
+            idx_i = np.arange(centers[i][0]-macro_length*subsampl_step/2, centers[i][0] + macro_length*subsampl_step/2 + 1 , subsampl_step).astype(int)
+            idx_j = np.arange(centers[i][1]-macro_length*subsampl_step/2, centers[i][1] + macro_length*subsampl_step/2 + 1 , subsampl_step).astype(int)
+            des.append(this_des.take(idx_i,mode='wrap',axis=0).take(idx_j,mode='wrap',axis=1).ravel())
+
+        res = np.asarray(des)
+        if(return_kps):
+            return(res,centers)
+        else:
+            return res
+
     else:
         des = list()
         for i in range(len(sigmas)):

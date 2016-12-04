@@ -1,4 +1,4 @@
-from sklearn import (cluster,decomposition,preprocessing)
+from sklearn import (cluster,decomposition,preprocessing,utils)
 import matplotlib.image as mpimg
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,19 +8,22 @@ from PIL import Image
 from skimage import (morphology, feature,color,transform)
 from scipy import cluster
 #from skimage.transform import (hough_line, hough_line_peaks,probabilistic_hough_line)
-import skimage.draw
+from skimage import (draw,transform)
 
 #Parameters
 n = 40 #Num of images for training
 #n = min(60, len(files)) # Load maximum 20 images
 grid_step = 4 #keypoints are extracted every 1/grid_scale pixels
+#n_im_pca = 20 #Num of images for PCA
 n_im_pca = 10 #Num of images for PCA
 n_components_pca = 60 #Num of components for PCA compression
-sift_sigmas = np.array([1, 2, 3])
-n_clusters_bow = 30 #Bag of words, num. of clusters
+#sift_sigmas = np.array([1, 2, 3])
+sift_sigmas = None
+n_clusters_bow = 500 #Bag of words, num. of clusters
 patch_size = 16 # each patch is 16*16 pixels
 foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
 canny_sigma = 4 #sigma of gaussian filter prior to canny edge detector
+n_colors = 20
 
 # Loaded a set of images
 root_dir = "training/"
@@ -37,52 +40,48 @@ gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(n)]
 
 print('Image size = ' + str(imgs[0].shape[0]) + ',' + str(imgs[0].shape[1]))
 
+print("Fitting k-means on images")
+img_sample = utils.shuffle(imgs[0].reshape(imgs[0].shape[0]*imgs[0].shape[1],-1), random_state=0)[:1000]
+codebook_colors,_ = cluster.vq.kmeans(img_sample,n_colors,thresh=1)
+codes, _ = cluster.vq.vq(imgs[3].reshape(imgs[3].shape[0]*imgs[3].shape[1],-1), codebook_colors)
+img_vq = hp.recreate_image(codebook_colors,codes,imgs[3].shape[0],imgs[3].shape[1])
+plt.imshow(hp.concatenate_images(img_vq,imgs[3]));
+plt.title('vector quantization with ' + str(n_colors) + ' colors');
+plt.show()
+
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then applied for dimensionality reduction.
 print('Extracting features (SIFT, RGB, etc..)')
-X_pca = hp.get_features(imgs[0:n_im_pca],canny_sigma,sift_sigmas,grid_step)
+X_sift = hp.get_features_sift(imgs[0:n_im_pca],canny_sigma,sift_sigmas,grid_step)
 print('Extracting euclidean distance transform')
 X_dt = hp.get_features_dt(imgs[0:n_im_pca],canny_sigma,grid_step)
+print('Extracting RGB colors on vector quantized versions')
+X_vq = hp.get_features_vq_colors(imgs[0:n_im_pca],grid_step,codebook_colors)
 
-print('Scaling PCA input')
-scaler = preprocessing.StandardScaler().fit(X_pca)
-X_pca = scaler.transform(X_pca)
+X_to_cluster = np.concatenate((X_sift, X_vq,X_dt),axis=1)
 
-print('Fitting PCA model with n_components = ' + str(n_components_pca))
-pca = decomposition.PCA(n_components_pca)
-pca.fit(X_pca)
-#Plot explained variance
-plt.figure()
-plt.plot(pca.explained_variance_, linewidth=2)
-plt.xlabel('n_components')
-plt.ylabel('explained_variance_')
-plt.show()
-X_pca_transf = pca.transform(X_pca)
-X_to_cluster = np.concatenate((X_pca_transf, X_dt),axis=1)
-
-import pdb; pdb.set_trace()
-print('Generating codebook on ' + str(n_im_pca) + ' images with ' + str(n_clusters_bow) + ' clusters')
+print('Generating codebook on ' + str(X_to_cluster.shape[0]) + ' samples  with ' + str(n_clusters_bow) + ' clusters')
 codebook, distortion = cluster.vq.kmeans(X_to_cluster, n_clusters_bow,thresh=1)
 
 codes = list()
 print('Generating codes on ' + str(n) + ' images')
 for i in range(n):
     sys.stdout.write('\r')
-    this_x_sift = hp.get_features([imgs[i]],canny_sigma,sift_sigmas,1)
-    this_x_dt = hp.get_features_dt([imgs[i]],canny_sigma,1)
-    this_x_sift = scaler.transform(this_x_sift)
-    this_x_transf = pca.transform(this_x_sift)
-    this_x = np.concatenate((this_x_transf,this_x_dt),axis=1)
+    this_x_sift = hp.get_features_sift([imgs[i]],canny_sigma,sift_sigmas,grid_step)
+    this_x_dt = hp.get_features_dt([imgs[i]],canny_sigma,grid_step)
+    this_x_vq = hp.get_features_vq_colors([imgs[i]],grid_step,codebook_colors)
+    this_x = np.concatenate((this_x_sift, this_x_vq,this_x_dt),axis=1)
     code, dist = cluster.vq.vq(this_x, codebook)
-    code = code.reshape(imgs[0].shape[0],imgs[0].shape[1])
+    code = code.reshape(int(imgs[0].shape[0]/grid_step),int(imgs[0].shape[1]/grid_step))
+    code = transform.rescale(code,grid_step,preserve_range=True)
     sys.stdout.write("%d/%d" % (i+1, n))
     sys.stdout.flush()
     codes.append(code)
+sys.stdout.write('\n')
     #histogram_of_words, bin_edges = np.histogram(code,bins=range(codebook.shape[0] + 1),normed=True)
 
-import pdb; pdb.set_trace()
 hist_bow = list()
 print('Getting Bag-of-Visual-Words on patches of size ' + str(patch_size))
-hist_bins = n_components_pca
+hist_bins = n_clusters_bow
 
 for i in range(len(codes)):
     code_patch = hp.img_crop(codes[i], patch_size, patch_size)
@@ -103,7 +102,7 @@ X = bow_patches
 Y = np.asarray([hp.value_to_class(np.mean(gt_patches[i]),foreground_threshold) for i in range(len(gt_patches))])
 
 print('Rebalance classes by oversampling')
-n_pos_to_add = np.sum(Y==0) - np.sum(Y==1)
+n_pos_to_add = (np.sum(Y==0) - np.sum(Y==1))*3
 idx_to_duplicate = np.where(Y==1)[0][np.random.randint(0,np.sum(Y==1),n_pos_to_add)]
 X = np.concatenate((X,X[idx_to_duplicate,:]),axis=0)
 Y = np.concatenate((Y,Y[idx_to_duplicate]),axis=0)
@@ -129,13 +128,13 @@ from sklearn.tree import DecisionTreeClassifier
 #scaler = preprocessing.StandardScaler().fit(X)
 #X = scaler.transform(X)
 
-print('Training SVM classifier')
-my_svm = svm.LinearSVC()
-my_svm.fit(X,Y)
+#print('Training SVM classifier')
+#my_svm = svm.SVC(kernel='rbf')
+#my_svm.fit(X,Y)
 
-print('Training Adaboost classifier')
-bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=3), algorithm="SAMME", n_estimators=1000)
-bdt.fit(X,Y)
+#print('Training Adaboost classifier')
+#bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=3), algorithm="SAMME", n_estimators=100)
+#bdt.fit(X,Y)
 
 # we create an instance of the classifier and fit the data
 print('Training LogReg classifier')
@@ -148,7 +147,8 @@ linreg = linear_model.LinearRegression()
 #linreg = linear_model.Ridge(alpha=1.0)
 linreg.fit(X, Y)
 
-for the_classifier in {linreg,logreg,my_svm,bdt}:
+#for the_classifier in {linreg,logreg,my_svm,bdt}:
+for the_classifier in {linreg,logreg}:
 
     # Predict on the training set
     Z = the_classifier.predict(X)
@@ -167,18 +167,17 @@ for the_classifier in {linreg,logreg,my_svm,bdt}:
     print('Results with classifier: ' + the_classifier.__class__.__name__)
     print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
 
-
-my_classifier = bdt
+my_classifier = linreg
 # Run prediction on the img_idx-th image
 img_idx = 10
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
-this_x_sift = hp.get_features([the_img],canny_sigma,sift_sigmas,1)
+this_x_sift = hp.get_features_sift([the_img],canny_sigma,sift_sigmas,1)
 this_x_dt = hp.get_features_dt([the_img],canny_sigma,1)
-this_x_sift = scaler.transform(this_x_sift)
-this_x_transf = pca.transform(this_x_sift)
-this_x = np.concatenate((this_x_transf,this_x_dt),axis=1)
+this_x_vq = hp.get_features_vq_colors([the_img],1,codebook_colors)
+this_x = np.concatenate((this_x_sift, this_x_vq,this_x_dt),axis=1)
+
 code, dist = cluster.vq.vq(this_x, codebook)
 code = code.reshape(the_img.shape[0],the_img.shape[1])
 
