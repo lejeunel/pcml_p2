@@ -51,14 +51,29 @@ def distance_transform(mat,edge_sigma=1):
 
     return dt
 
+def thr_to_gt(img,gt,sigma):
+
+    img_thr = np.zeros((img.shape[0],img.shape[1]))
+    img_thr = color.rgb2gray(img)
+    im_thr = filters.gaussian(img_thr,sigma)
+    mask = np.where(gt)
+    masked_img = color.rgb2gray(img)[mask[0],mask[1]]
+    high_thr = np.mean(masked_img)+np.std(masked_img)
+    low_thr = np.mean(masked_img)-np.std(masked_img)
+    img_thr[np.where(img_thr > high_thr)] = 0
+    img_thr[np.where(img_thr < low_thr)] = 0
+
+    return img_thr
+
 def get_hough_feature(imgs,sig_canny=1,threshold=10, line_length=45,line_gap=3):
     #Hough-lines extractor
     hough_lines = list()
     for i in range(len(imgs)):
-        im = color.rgb2gray(imgs[i])
+        im = filters.gaussian(color.rgb2gray(imgs[i]),sig_canny)
         hough_lines.append(np.zeros((im.shape[0],im.shape[1])))
-        edge = feature.canny(im,sigma=sig_canny)
-        lines = probabilistic_hough_line(edge, threshold=threshold, line_length=line_length,line_gap=line_gap)
+        #im_thr = im<0.4
+        #edge = feature.canny(im,sigma=sig_canny)
+        lines = probabilistic_hough_line(imgs[i], threshold=threshold, line_length=line_length,line_gap=line_gap)
         for line in lines:
             p0, p1 = line
             line_idx = draw.line(p0[1], p0[0], p1[1], p1[0])

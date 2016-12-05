@@ -1,11 +1,11 @@
-from sklearn import (cluster,decomposition,preprocessing,utils)
+from sklearn import (cluster,decomposition,preprocessing,utils,metrics)
 import matplotlib.image as mpimg
 import numpy as np
 import matplotlib.pyplot as plt
 import os,sys
 import helpers as hp
 from PIL import Image
-from skimage import (morphology, feature,color,transform)
+from skimage import (morphology, feature,color,transform,filters)
 from scipy import cluster
 #from skimage.transform import (hough_line, hough_line_peaks,probabilistic_hough_line)
 from skimage import (draw,transform)
@@ -23,7 +23,7 @@ n_clusters_bow = 500 #Bag of words, num. of clusters
 patch_size = 16 # each patch is 16*16 pixels
 foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
 canny_sigma = 4 #sigma of gaussian filter prior to canny edge detector
-n_colors = 20
+n_colors = 64
 
 # Loaded a set of images
 root_dir = "training/"
@@ -40,14 +40,27 @@ gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(n)]
 
 print('Image size = ' + str(imgs[0].shape[0]) + ',' + str(imgs[0].shape[1]))
 
+idx = 5
 print("Fitting k-means on images")
 img_sample = utils.shuffle(imgs[0].reshape(imgs[0].shape[0]*imgs[0].shape[1],-1), random_state=0)[:1000]
 codebook_colors,_ = cluster.vq.kmeans(img_sample,n_colors,thresh=1)
-codes, _ = cluster.vq.vq(imgs[3].reshape(imgs[3].shape[0]*imgs[3].shape[1],-1), codebook_colors)
-img_vq = hp.recreate_image(codebook_colors,codes,imgs[3].shape[0],imgs[3].shape[1])
-plt.imshow(hp.concatenate_images(img_vq,imgs[3]));
+codes, _ = cluster.vq.vq(imgs[idx].reshape(imgs[idx].shape[0]*imgs[idx].shape[1],-1), codebook_colors)
+img_vq = hp.recreate_image(codebook_colors,codes,imgs[idx].shape[0],imgs[idx].shape[1])
+plt.imshow(hp.concatenate_images(img_vq,imgs[idx]));
 plt.title('vector quantization with ' + str(n_colors) + ' colors');
 plt.show()
+
+the_img = img_vq
+the_gt = gt_imgs[idx]
+
+img_thr = hp.thr_to_gt(the_img,the_gt,2)
+
+elem = morphology.disk(1)
+the_img = color.label2rgb(the_gt.astype(bool),the_img)
+hough = hp.get_hough_feature([img_thr],sig_canny=1,threshold=10,line_length=200,line_gap=2)[0].astype(bool)
+hough = morphology.binary_dilation(hough,elem)
+hough_img = hp.concatenate_images(the_img,hough)
+plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
 
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then applied for dimensionality reduction.
 print('Extracting features (SIFT, RGB, etc..)')
@@ -102,7 +115,7 @@ X = bow_patches
 Y = np.asarray([hp.value_to_class(np.mean(gt_patches[i]),foreground_threshold) for i in range(len(gt_patches))])
 
 print('Rebalance classes by oversampling')
-n_pos_to_add = (np.sum(Y==0) - np.sum(Y==1))*3
+n_pos_to_add = (np.sum(Y==0) - np.sum(Y==1))*(np.sum(Y==0)/np.sum(Y==1))
 idx_to_duplicate = np.where(Y==1)[0][np.random.randint(0,np.sum(Y==1),n_pos_to_add)]
 X = np.concatenate((X,X[idx_to_duplicate,:]),axis=0)
 Y = np.concatenate((Y,Y[idx_to_duplicate]),axis=0)
@@ -157,6 +170,10 @@ for the_classifier in {linreg,logreg}:
     #thr_pred = 0
 
     # Get non-zeros in prediction and grountruth arrays
+    Z_bin = np.zeros(Z.shape)
+    Z_bin[np.where(Z>=thr_pred)[0]] = 1
+    Z_bin[np.where(Z<thr_pred)[0]] = 0
+    Z_bin = Z_bin.astype(bool)
     Z_pos = np.where(Z>=thr_pred)[0]
     Z_neg = np.where(Z<thr_pred)[0]
     Y_pos = np.nonzero(Y)[0]
@@ -164,8 +181,10 @@ for the_classifier in {linreg,logreg}:
 
     TPR = len(list(set(Y_pos) & set(Z_pos))) / float(len(Z))
     FPR = len(list(set(Y_neg) & set(Z_pos))) / float(len(Z))
+    f1_score = metrics.f1_score(Y, Z_bin, average='weighted') 
     print('Results with classifier: ' + the_classifier.__class__.__name__)
     print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+    print('F1-score = ' + str(f1_score))
 
 my_classifier = linreg
 # Run prediction on the img_idx-th image
