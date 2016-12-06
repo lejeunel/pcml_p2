@@ -6,34 +6,42 @@ from PIL import Image
 import sys
 sys.path.append('/usr/lib/python3.5/site-packages')
 import cv2
-from skimage import (color,feature,filters,draw)
+from skimage import (color,feature,filters,draw,morphology)
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
 from scipy import ndimage
 from skimage.transform import (hough_line, hough_line_peaks,
-                               probabilistic_hough_line)
+                               probabilistic_hough_line,rescale)
 from scipy import cluster
 
-def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step,return_kps=False):
+def get_features_edges(imgs,grid_step,canny_sigma):
 
-    X_sift = np.asarray([ get_sift_densely(imgs[i],step=grid_step,sigmas=sift_sigmas,mode='neighborhood',return_kps=False) for i in range(len(imgs))])
-    X_sift = X_sift.reshape(len(imgs)*X_sift.shape[1],-1)
+    w = imgs[0].shape[1]
+    h = imgs[0].shape[0]
+    X_edge = np.asarray([ feature.canny(color.rgb2gray(imgs[i]),sigma=canny_sigma) for i in range(len(imgs))])
+    patches = [img_crop(X_edge[i], grid_step, grid_step) for i in range(len(X_edge))]
+    patches = np.asarray([np.mean(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
 
-    return X_sift
+    return patches.reshape(-1,1)
 
 def get_features_vq_colors(imgs,grid_step,codebook):
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
-    X_rgb = np.asarray([ recreate_image(codebook,cluster.vq.vq(imgs[i].reshape(w*h,-1), codebook)[0],w,h) for i in range(len(imgs))])
-    X_rgb = X_rgb[:,::grid_step,::grid_step,:]
-    X_rgb = X_rgb.reshape(len(imgs)*X_rgb.shape[1]*X_rgb.shape[2],-1)
+    X_rgb = [ recreate_image(codebook,cluster.vq.vq(imgs[i].reshape(w*h,-1), codebook)[0],w,h) for i in range(len(imgs))]
+    patches = [img_crop(X_rgb[i], grid_step, grid_step) for i in range(len(X_rgb))]
+    patches = np.asarray([np.mean(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
 
-    return X_rgb
+    return patches.reshape(-1,1)
 
 def get_features_dt(imgs,canny_sigma,grid_step):
     X_dt = np.asarray([ distance_transform_edge(color.rgb2gray(imgs[i]),edge_sigma=canny_sigma) for i in range(len(imgs))])
+    patches = [img_crop(X_dt[i], grid_step, grid_step) for i in range(len(X_dt))]
+    patches = np.asarray([np.mean(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
+
+    return patches.reshape(-1,1)
+
     X_dt = X_dt[:,::grid_step,::grid_step].reshape(-1,1)
     X_dt = (X_dt - np.mean(X_dt))/np.var(X_dt)
     return X_dt
@@ -51,35 +59,51 @@ def distance_transform(mat,edge_sigma=1):
 
     return dt
 
-def thr_to_gt(img,gt,sigma):
+def my_thr(img,rel_thr,sigma):
 
     img_thr = np.zeros((img.shape[0],img.shape[1]))
     img_thr = color.rgb2gray(img)
-    im_thr = filters.gaussian(img_thr,sigma)
-    mask = np.where(gt)
-    masked_img = color.rgb2gray(img)[mask[0],mask[1]]
-    high_thr = np.mean(masked_img)+np.std(masked_img)
-    low_thr = np.mean(masked_img)-np.std(masked_img)
+    img_thr = (img_thr-np.mean(img_thr))/np.std(img_thr)
+    high_thr = np.mean(img_thr)+rel_thr*np.std(img_thr)
+    low_thr = np.mean(img_thr)-rel_thr*np.std(img_thr)
     img_thr[np.where(img_thr > high_thr)] = 0
     img_thr[np.where(img_thr < low_thr)] = 0
 
     return img_thr
 
-def get_hough_feature(imgs,sig_canny=1,threshold=10, line_length=45,line_gap=3):
-    #Hough-lines extractor
-    hough_lines = list()
-    for i in range(len(imgs)):
-        im = filters.gaussian(color.rgb2gray(imgs[i]),sig_canny)
-        hough_lines.append(np.zeros((im.shape[0],im.shape[1])))
-        #im_thr = im<0.4
-        #edge = feature.canny(im,sigma=sig_canny)
-        lines = probabilistic_hough_line(imgs[i], threshold=threshold, line_length=line_length,line_gap=line_gap)
-        for line in lines:
-            p0, p1 = line
-            line_idx = draw.line(p0[1], p0[0], p1[1], p1[0])
-            hough_lines[-1][line_idx] = 1
+def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
 
-    return hough_lines
+    X_hough = [ make_hough(imgs[i],rel_thr, max_n_lines,sig_canny,radius,threshold,line_length,line_gap) for i in range(len(imgs))]
+    patches = [img_crop(X_hough[i], grid_step, grid_step) for i in range(len(X_hough))]
+    patches = np.asarray([np.any(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
+
+    return patches.reshape(-1,1)
+
+def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
+
+    #Hough-lines extractor
+    elem = morphology.disk(1)
+    hough_lines = list()
+    im = np.abs(my_thr(img,rel_thr,sig_canny))
+    hough_lines.append(np.zeros((im.shape[0],im.shape[1])))
+
+    lines = probabilistic_hough_line(im, threshold=threshold, line_length=line_length,line_gap=line_gap)
+    line_idx = list()
+    line_std_rgb = list()
+    for line in lines:
+        p0, p1 = line
+        line_idx.append( draw.line(p0[1], p0[0], p1[1], p1[0]))
+        line_std_rgb.append(np.std(color.rgb2gray(img)[line_idx[-1][0],line_idx[-1][1]]))
+        #hough_lines[-1][line_idx] = 1
+    line_std_rgb = np.asarray(line_std_rgb)
+    line_std_idx = np.argsort(line_std_rgb)[0:max_n_lines]
+    for i in range(max_n_lines):
+        this_line_idx = line_idx[line_std_idx[i]]
+        hough_lines[-1][this_line_idx] = 1
+
+    hough_lines[-1] = morphology.binary_dilation(hough_lines[-1],elem)
+
+    return np.asarray(hough_lines).reshape(im.shape[0],im.shape[1])
 
 def recreate_image(codebook, labels, w, h):
     """Recreate the (compressed) image from the code book & labels"""
@@ -113,16 +137,14 @@ def kmeans_img(img,n_clusters):
 
     return recreate_image(kmeans.cluster_centers_, labels, w, h)
 
-def get_sift_neighborhood(img,center,subsampl_step,macro_length,sigma=1):
-    im_pad = np.pad(color.rgb2gray(img),int(macro_length*subsampl_step/2),mode='symmetric')
-    kpDense = [cv2.KeyPoint(x, y, subsampl_step ) for y in np.arange(center[1], center[1] + macro_length*subsampl_step + 1, subsampl_step) for x in np.arange(center[0], center[0] + macro_length*subsampl_step + 1, subsampl_step)]
-    sift = cv2.xfeatures2d.SIFT_create(sigma=sigma)
-    img = (color.rgb2gray(img)*255).astype(np.uint8)
-    kps,des = sift.compute(color.rgb2gray(img),kpDense)
+def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step,return_kps=False):
 
-    return np.asarray(des).reshape(1,-1)
+    X_sift = np.asarray([ get_sift_densely(imgs[i],step=grid_step,sigmas=sift_sigmas,mode='neighborhood',return_kps=False) for i in range(len(imgs))])
+    X_sift = X_sift.reshape(len(imgs)*X_sift.shape[1],-1)
 
-def get_sift_densely(img,step=1,sigmas=None,mode='neighborhood',subsampl_step = 4,macro_length=2,return_kps=False):
+    return X_sift
+
+def get_sift_densely(img,step=1,sigmas=None,mode='neighborhood',subsampl_step = 2,macro_length=2,return_kps=False):
 
     def do_it(img,step):
         sift = cv2.xfeatures2d.SIFT_create(sigma=1)
