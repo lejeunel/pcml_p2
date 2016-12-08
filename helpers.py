@@ -6,7 +6,8 @@ from PIL import Image
 import sys
 sys.path.append('/usr/lib/python3.5/site-packages')
 import cv2
-from skimage import (color,feature,filters,draw,morphology)
+from skimage import (color,feature,filters,draw,morphology,segmentation)
+from skimage.future import graph
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
@@ -35,6 +36,15 @@ def get_features_vq_colors(imgs,grid_step,codebook):
 
     return patches.reshape(-1,1)
 
+def get_features_hist(imgs,n_bins,grid_step):
+    patches = [img_crop(imgs[i], grid_step, grid_step) for i in range(len(imgs))]
+    patches = np.asarray([np.asarray((np.histogram(patches[i][j][:,:,0],n_bins)[0],
+                            np.histogram(patches[i][j][:,:,1],n_bins)[0],
+                            np.histogram(patches[i][j][:,:,2],n_bins)[0])).reshape(1,-1)
+                           for i in range(len(patches)) for j in range(len(patches[i]))])
+
+    return patches.reshape(-1,3*n_bins)
+
 def get_features_dt(imgs,canny_sigma,grid_step):
     X_dt = np.asarray([ distance_transform_edge(color.rgb2gray(imgs[i]),edge_sigma=canny_sigma) for i in range(len(imgs))])
     patches = [img_crop(X_dt[i], grid_step, grid_step) for i in range(len(X_dt))]
@@ -62,6 +72,8 @@ def distance_transform(mat,edge_sigma=1):
 def my_thr(img,rel_thr,sigma):
 
     img_thr = np.zeros((img.shape[0],img.shape[1]))
+    if sigma is not None:
+        img = filters.gaussian(img,sigma,multichannel=True)
     img_thr = color.rgb2gray(img)
     img_thr = (img_thr-np.mean(img_thr))/np.std(img_thr)
     high_thr = np.mean(img_thr)+rel_thr*np.std(img_thr)
@@ -73,37 +85,44 @@ def my_thr(img,rel_thr,sigma):
 
 def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
 
-    X_hough = [ make_hough(imgs[i],rel_thr, max_n_lines,sig_canny,radius,threshold,line_length,line_gap) for i in range(len(imgs))]
-    patches = [img_crop(X_hough[i], grid_step, grid_step) for i in range(len(X_hough))]
-    patches = np.asarray([np.any(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
+    hough_maps = [ make_hough(imgs[i],rel_thr, max_n_lines,sig_canny,radius,threshold,line_length,line_gap) != 0 for i in range(len(imgs))]
+    patches = [img_crop(hough_maps[i], grid_step, grid_step) for i in range(len(hough_maps))]
+    patches = np.asarray([np.mean(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
 
     return patches.reshape(-1,1)
 
-def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
+def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3,slic_segments = 400, gc_thresh=0.05):
 
     #Hough-lines extractor
     elem = morphology.disk(1)
     hough_lines = list()
     im = np.abs(my_thr(img,rel_thr,sig_canny))
-    hough_lines.append(np.zeros((im.shape[0],im.shape[1])))
+    edges = filters.sobel(color.rgb2gray(img))
+    labels1 = segmentation.slic(img, compactness=30, n_segments=slic_segments)
+    g = graph.rag_boundary(labels1,edges)
+    labels2 = graph.cut_threshold(labels1, g,thresh=gc_thresh)
+    gc_img = color.label2rgb(labels2, img, kind='avg')
+
+    hough_map = np.zeros((im.shape[0],im.shape[1]))
 
     lines = probabilistic_hough_line(im, threshold=threshold, line_length=line_length,line_gap=line_gap)
     line_idx = list()
     line_std_rgb = list()
+
     for line in lines:
         p0, p1 = line
         line_idx.append( draw.line(p0[1], p0[0], p1[1], p1[0]))
-        line_std_rgb.append(np.std(color.rgb2gray(img)[line_idx[-1][0],line_idx[-1][1]]))
+        line_std_rgb.append(np.min(np.std(gc_img[line_idx[-1][0],line_idx[-1][1]],axis=0)))
         #hough_lines[-1][line_idx] = 1
     line_std_rgb = np.asarray(line_std_rgb)
-    line_std_idx = np.argsort(line_std_rgb)[0:max_n_lines]
-    for i in range(max_n_lines):
+    line_std_idx = np.argsort(line_std_rgb)
+    for i in range(np.min((max_n_lines,len(lines)))):
         this_line_idx = line_idx[line_std_idx[i]]
-        hough_lines[-1][this_line_idx] = 1
+        this_line_labels = np.unique(labels2[this_line_idx[0],this_line_idx[1]])
+        for i in np.unique(this_line_labels):
+            hough_map += labels2 == i
 
-    hough_lines[-1] = morphology.binary_dilation(hough_lines[-1],elem)
-
-    return np.asarray(hough_lines).reshape(im.shape[0],im.shape[1])
+    return hough_map
 
 def recreate_image(codebook, labels, w, h):
     """Recreate the (compressed) image from the code book & labels"""
@@ -186,6 +205,10 @@ def get_sift_densely(img,step=1,sigmas=None,mode='neighborhood',subsampl_step = 
 def load_image(infilename):
     data = mpimg.imread(infilename)
     return data
+
+def rgb_remove_green(img):
+    img[:,:,1] = np.zeros((img.shape[0],img.shape[1]))
+    return img
 
 def img_float_to_uint8(img):
     rimg = img - np.min(img)

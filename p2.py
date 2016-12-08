@@ -1,3 +1,4 @@
+import re
 from sklearn import (cluster,decomposition,preprocessing,utils,metrics)
 import matplotlib.image as mpimg
 import numpy as np
@@ -24,56 +25,68 @@ patch_size = 16 # each patch is 16*16 pixels
 foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a foreground label to a patch
 canny_sigma = 4 #sigma of gaussian filter prior to canny edge detector
 n_colors = 128
+hough_max_lines = 50
+
+outliers = np.array([10,20,26,27,64,76])
 
 # Loaded a set of images
 root_dir = "training/"
 
 image_dir = root_dir + "images/"
 files = os.listdir(image_dir)
+files = sorted(files, key=lambda x: (int(re.sub('\D','',x)),x))
+
+files_clean = list()
+for i in range(len(files)):
+    if( i not in outliers):
+        print(i)
+        files_clean.append(files[i])
+
+files = files_clean
+
 print("Loading " + str(n) + " training images")
 #imgs = [color.rgb2hsv(hp.load_image(image_dir + files[i])) for i in range(n)]
-imgs = [hp.load_image(image_dir + files[i]) for i in range(n)]
+#imgs = [hp.load_image(image_dir + files[i]) for i in range(n)]
+imgs = [hp.load_image(image_dir + files[i]) for i in range(len(files))]
 
 gt_dir = root_dir + "groundtruth/"
 print("Loading " + str(n) + " ground-truth images")
-gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(n)]
+#gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(n)]
+gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(len(files))]
 
 print('Image size = ' + str(imgs[0].shape[0]) + ',' + str(imgs[0].shape[1]))
 
-idx = 8
-print("Fitting k-means on images")
-img_sample = utils.shuffle(imgs[0].reshape(imgs[0].shape[0]*imgs[0].shape[1],-1), random_state=0)[:1000]
-codebook_colors,_ = cluster.vq.kmeans(img_sample,n_colors,thresh=1)
-codes, _ = cluster.vq.vq(imgs[idx].reshape(imgs[idx].shape[0]*imgs[idx].shape[1],-1), codebook_colors)
-img_vq = hp.recreate_image(codebook_colors,codes,imgs[idx].shape[0],imgs[idx].shape[1])
-plt.imshow(hp.concatenate_images(img_vq,imgs[idx]));
-plt.title('vector quantization with ' + str(n_colors) + ' colors');
-plt.show()
+from skimage import data, segmentation, color
+from skimage.future import graph
+from matplotlib import pyplot as plt
+#plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
+idx = 1
 
 the_img = imgs[idx]
 the_gt = gt_imgs[idx]
 
 img_and_gt = color.label2rgb(the_gt.astype(bool),the_img)
-hough = hp.make_hough(the_img,0.5,25,sig_canny=1,radius=20,threshold=1,line_length=200,line_gap=4)
+hough = hp.make_hough(the_img,0.5,25,sig_canny=1,radius=20,threshold=1,line_length=100,line_gap=3)
 hough_img = hp.concatenate_images(img_and_gt,color.rgb2gray(hough))
 plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
 
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then applied for dimensionality reduction.
+print('Extracting hough transforms')
+X_hough = hp.get_features_hough(imgs[0:n],0.4,hough_max_lines,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
+print('Extracting RGB histograms')
+X_hist = hp.get_features_hist(imgs[0:n],10,grid_step)
 print('Extracting edges')
-X_dt = hp.get_features_edges(imgs[0:n],grid_step,canny_sigma)
+X_edges = hp.get_features_edges(imgs[0:n],grid_step,canny_sigma)
 print('Extracting euclidean distance transform')
 X_dt = hp.get_features_dt(imgs[0:n],canny_sigma,grid_step)
-print('Extracting mean RGB values on vector quantized patches')
-X_vq = hp.get_features_vq_colors(imgs[0:n],grid_step,codebook_colors)
-print('Extracting hough transforms')
-X_hough = hp.get_features_hough(imgs[0:n],0.4,20,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
 print('Extracting SIFT features')
 X_sift = hp.get_features_sift(imgs[0:n],canny_sigma,sift_sigmas,grid_step)
+
 print('Fitting PCA model on SIFT with n_components = ' + str(n_components_pca))
 pca = decomposition.PCA(n_components_pca)
 pca.fit(X_sift)
 X_sift = pca.transform(X_sift)
-X = np.concatenate((X_sift, X_hough,X_vq,X_dt),axis=1)
+X = np.concatenate((X_sift, X_hough,X_hist,X_dt),axis=1)
 
 gt_patches = [hp.img_crop(gt_imgs[i], patch_size, patch_size) for i in range(n)]
 
@@ -153,18 +166,18 @@ for the_classifier in {linreg,logreg,bdt}:
 
 my_classifier = bdt
 # Run prediction on the img_idx-th image
-img_idx = 0
+img_idx = 10
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
 X_dt = hp.get_features_dt([imgs[img_idx]],canny_sigma,grid_step)
-X_vq = hp.get_features_vq_colors([imgs[img_idx]],grid_step,codebook_colors)
-X_hough = hp.get_features_hough([imgs[img_idx]],0.4,20,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
+X_hist = hp.get_features_hist([imgs[img_idx]],10,grid_step)
+X_hough = hp.get_features_hough([imgs[img_idx]],0.4,hough_max_lines,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
 X_sift = hp.get_features_sift([imgs[img_idx]],canny_sigma,sift_sigmas,grid_step)
 pca = decomposition.PCA(n_components_pca)
 pca.fit(X_sift)
 X_sift = pca.transform(X_sift)
-Xi = np.concatenate((X_sift, X_hough,X_vq,X_dt),axis=1)
+Xi = np.concatenate((X_sift, X_hough,X_hist,X_dt),axis=1)
 
 the_gt_patches = hp.img_crop(the_gt, grid_step, grid_step)
 Yi = np.asarray([hp.value_to_class(the_gt_patches[i],foreground_threshold) for i in range(len(the_gt_patches))])
