@@ -64,28 +64,52 @@ idx = 11
 the_img = imgs[idx]
 the_gt = gt_imgs[idx]
 
-img_and_gt = color.label2rgb(the_gt.astype(bool),the_img)
-hough = hp.make_hough(the_img,0.5,25,sig_canny=1,radius=20,threshold=1,line_length=100,line_gap=3)
-hough_img = hp.concatenate_images(img_and_gt,color.rgb2gray(hough))
-plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
-
+n_im_kmeans = 5
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then applied for dimensionality reduction.
-print('Extracting hough transforms')
-X_hough = hp.get_features_hough(imgs[0:n],0.4,hough_max_lines,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
 print('Extracting RGB histograms')
-X_hist = hp.get_features_hist(imgs[0:n],10,grid_step)
-print('Extracting edges')
-X_edges = hp.get_features_edges(imgs[0:n],grid_step,canny_sigma)
+X_hist = hp.get_features_hist(imgs[0:n_im_kmeans],10,grid_step)
 print('Extracting euclidean distance transform')
-X_dt = hp.get_features_dt(imgs[0:n],canny_sigma,grid_step)
+X_dt = hp.get_features_dt(imgs[0:n_im_kmeans],canny_sigma,grid_step)
 print('Extracting SIFT features')
-X_sift = hp.get_features_sift(imgs[0:n],canny_sigma,sift_sigmas,grid_step)
+X_sift = hp.get_features_sift(imgs[0:n_im_kmeans],canny_sigma,sift_sigmas,grid_step)
 
 print('Fitting PCA model on SIFT with n_components = ' + str(n_components_pca))
 pca = decomposition.PCA(n_components_pca)
 pca.fit(X_sift)
 X_sift = pca.transform(X_sift)
-X = np.concatenate((X_sift, X_hough,X_hist,X_dt),axis=1)
+X = np.concatenate((X_sift, X_hist,X_dt),axis=1)
+
+print('Generating codebook on ' + str(X.shape[0]) + ' samples  with ' + str(n_clusters_bow) + ' clusters')
+codebook, distortion = cluster.vq.kmeans(X, n_clusters_bow,thresh=1)
+
+import pdb; pdb.set_trace()
+codes = list()
+print('Generating codes on ' + str(n) + ' images')
+for i in range(n):
+    sys.stdout.write('\r')
+    labels1 = segmentation.slic(imgs[i], compactness=30, n_segments=slic_segments)
+    this_x_sift = hp.get_features_sift([imgs[i]],canny_sigma,sift_sigmas,grid_step)
+    this_x_sift = pca.transform(this_x_sift)
+    this_x_dt = hp.get_features_dt([imgs[i]],canny_sigma,grid_step)
+    this_x_hist = hp.get_features_hist([imgs[i]],10,grid_step)
+    this_x = np.concatenate((this_x_sift, this_x_hist,this_x_dt),axis=1)
+    code, dist = cluster.vq.vq(this_x, codebook)
+    code = code.reshape(int(imgs[0].shape[0]/grid_step),int(imgs[0].shape[1]/grid_step))
+    code = transform.rescale(code,grid_step,preserve_range=True)
+    sys.stdout.write("%d/%d" % (i+1, n))
+    sys.stdout.flush()
+    codes.append(code)
+sys.stdout.write('\n')
+    #histogram_of_words, bin_edges = np.histogram(code,bins=range(codebook.shape[0] + 1),normed=True)
+
+hist_bow = list()
+print('Getting Bag-of-Visual-Words on patches of size ' + str(patch_size))
+hist_bins = n_clusters_bow
+
+for i in range(len(codes)):
+    code_patch = hp.img_crop(codes[i], patch_size, patch_size)
+    hist_bow.append([np.histogram(code_patch[i],bins=hist_bins)[0] for i in range(len(code_patch))])
+
 
 gt_patches = [hp.img_crop(gt_imgs[i], patch_size, patch_size) for i in range(n)]
 

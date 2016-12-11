@@ -85,9 +85,10 @@ def my_thr(img,rel_thr,sigma):
 
 def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
 
-    hough_maps = [ make_hough(imgs[i],rel_thr, max_n_lines,sig_canny,radius,threshold,line_length,line_gap) != 0 for i in range(len(imgs))]
-    patches = [img_crop(hough_maps[i], grid_step, grid_step) for i in range(len(hough_maps))]
-    patches = np.asarray([np.mean(patches[i][j]).astype(int) for i in range(len(patches)) for j in range(len(patches[i]))])
+    hough_maps = [ make_hough(imgs[i],rel_thr, max_n_lines,sig_canny,radius,threshold,line_length,line_gap) for i in range(len(imgs))]
+    patches_per_image = [img_crop(hough_maps[i], grid_step, grid_step) for i in range(len(hough_maps))]
+    import pdb; pdb.set_trace()
+    patches = np.asarray([np.mean(patches_per_image[i][j].astype(int)) for i in range(len(patches_per_image)) for j in range(len(patches_per_image[i]))])
 
     return patches.reshape(-1,1)
 
@@ -103,7 +104,7 @@ def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_l
     labels2 = graph.cut_threshold(labels1, g,thresh=gc_thresh)
     gc_img = color.label2rgb(labels2, img, kind='avg')
 
-    hough_map = np.zeros((im.shape[0],im.shape[1]))
+    hough_map = np.zeros((im.shape[0],im.shape[1],3))
 
     lines = probabilistic_hough_line(im, threshold=threshold, line_length=line_length,line_gap=line_gap)
     line_idx = list()
@@ -120,7 +121,8 @@ def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_l
         this_line_idx = line_idx[line_std_idx[i]]
         this_line_labels = np.unique(labels2[this_line_idx[0],this_line_idx[1]])
         for i in np.unique(this_line_labels):
-            hough_map += labels2 == i
+            this_label_idx = np.where(labels2 == i)
+            hough_map += gc_img[this_label_idx[0],this_label_idx[1],:]
 
     return hough_map
 
