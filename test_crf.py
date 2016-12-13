@@ -65,6 +65,7 @@ Y_train_flat = [y_.ravel() for y_ in Y_train]
 
 X_train_directions, X_train_edge_features = prepare_data(X_train)
 
+import pdb; pdb.set_trace()
 inference = 'qpbo'
 # first, train on X with directions only:
 crf = EdgeFeatureGraphCRF(inference_method=inference)

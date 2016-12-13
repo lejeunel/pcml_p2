@@ -7,11 +7,15 @@ import os,sys
 import helpers as hp
 from PIL import Image
 from skimage import (morphology, feature,color,transform,filters)
+from skimage import (draw,transform,data, segmentation, color)
 from scipy import cluster
-#from skimage.transform import (hough_line, hough_line_peaks,probabilistic_hough_line)
-from skimage import (draw,transform)
+from skimage.future import graph
+from matplotlib import pyplot as plt
+from pystruct.models import EdgeFeatureGraphCRF
+from pystruct.learners import OneSlackSSVM
 
 #Parameters
+params = dict()
 n = 40 #Num of images for training
 #n = min(60, len(files)) # Load maximum 20 images
 grid_step = 16 #keypoints are extracted every grid_step pixels
@@ -26,10 +30,19 @@ foreground_threshold = 0.25 # percentage of pixels > 1 required to assign a fore
 canny_sigma = 4 #sigma of gaussian filter prior to canny edge detector
 n_colors = 128
 hough_max_lines = 50
+hough_line_gap = 3
+hough_line_length = 100
+hough_threshold = 1
+hough_canny = 1
+hough_radius = 20
+hough_rel_thr = 0.5
+slic_segments = 400
+slic_compactness = 30
+
+params = locals()
 
 outliers = np.array([10,20,26,27,64,76])
 
-# Loaded a set of images
 root_dir = "training/"
 
 image_dir = root_dir + "images/"
@@ -44,21 +57,14 @@ for i in range(len(files)):
 files = files_clean
 
 print("Loading " + str(n) + " training images")
-#imgs = [color.rgb2hsv(hp.load_image(image_dir + files[i])) for i in range(n)]
-#imgs = [hp.load_image(image_dir + files[i]) for i in range(n)]
 imgs = [hp.load_image(image_dir + files[i]) for i in range(len(files))]
 
 gt_dir = root_dir + "groundtruth/"
 print("Loading " + str(n) + " ground-truth images")
-#gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(n)]
 gt_imgs = [hp.load_image(gt_dir + files[i]) for i in range(len(files))]
 
 print('Image size = ' + str(imgs[0].shape[0]) + ',' + str(imgs[0].shape[1]))
 
-from skimage import data, segmentation, color
-from skimage.future import graph
-from matplotlib import pyplot as plt
-#plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
 idx = 11
 
 the_img = imgs[idx]
@@ -70,47 +76,58 @@ hough_img = hp.concatenate_images(img_and_gt,color.rgb2gray(hough))
 plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
 
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then applied for dimensionality reduction.
-print('Extracting hough transforms')
-X_hough = hp.get_features_hough(imgs[0:n],0.4,hough_max_lines,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
-print('Extracting RGB histograms')
-X_hist = hp.get_features_hist(imgs[0:n],10,grid_step)
-print('Extracting edges')
-X_edges = hp.get_features_edges(imgs[0:n],grid_step,canny_sigma)
-print('Extracting euclidean distance transform')
-X_dt = hp.get_features_dt(imgs[0:n],canny_sigma,grid_step)
 print('Extracting SIFT features')
-X_sift = hp.get_features_sift(imgs[0:n],canny_sigma,sift_sigmas,grid_step)
+X_sift = hp.get_features_sift(imgs[0:n_im_pca],canny_sigma,sift_sigmas,grid_step)
 
 print('Fitting PCA model on SIFT with n_components = ' + str(n_components_pca))
 pca = decomposition.PCA(n_components_pca)
 pca.fit(X_sift)
 X_sift = pca.transform(X_sift)
-X = np.concatenate((X_sift, X_hough,X_hist,X_dt),axis=1)
 
-gt_patches = [hp.img_crop(gt_imgs[i], patch_size, patch_size) for i in range(n)]
+print('Generating SIFT codebook on ' + str(X_sift.shape[0]) + ' samples  with ' + str(n_components_pca) + ' clusters')
+codebook, distortion = cluster.vq.kmeans(X_sift, n_components_pca,thresh=1)
+
+print("Extracting features on " + str(n) + " images")
+X = list()
+sp_labels = list()
+for i in range(n):
+    sys.stdout.write('\r')
+    this_X, this_sp_labels = hp.make_features_sp(imgs[i],pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
+    X.append(this_X)
+    sp_labels.append(this_sp_labels)
+    sys.stdout.write("%d/%d" % (i+1, n))
+    sys.stdout.flush()
+sys.stdout.write('\n')
+
+print("Extracting ground-truths on " + str(n) + " images")
+Y = list()
+for i in range(n):
+    sys.stdout.write('\r')
+    this_y = np.asarray(hp.img_crop_sp(gt_imgs[i], sp_labels[i]))
+    Y.append([])
+    for j in range(len(this_y)):
+        Y[-1].append(np.any(this_y[j]).astype(int))
+    sys.stdout.write("%d/%d" % (i+1, n))
+    sys.stdout.flush()
+sys.stdout.write('\n')
 
 print('Linearizing list of patches')
-gt_patches =  np.asarray([gt_patches[i][j] for i in range(len(gt_patches)) for j in range(len(gt_patches[i]))])
-
-# Compute features for each image patch
-print('Building ground-truth array')
-Y = np.asarray([hp.value_to_class(np.mean(gt_patches[i]),foreground_threshold) for i in range(len(gt_patches))])
+X_lin =  np.asarray([X[i][j] for i in range(len(X)) for j in range(len(X[i]))])
+Y_lin =  np.asarray([Y[i][j] for i in range(len(Y)) for j in range(len(Y[i]))])
 
 print('Rebalance classes by oversampling')
-n_pos_to_add = (np.sum(Y==0) - np.sum(Y==1))
-idx_to_duplicate = np.where(Y==1)[0][np.random.randint(0,np.sum(Y==1),n_pos_to_add)]
-X = np.concatenate((X,X[idx_to_duplicate,:]),axis=0)
-Y = np.concatenate((Y,Y[idx_to_duplicate]),axis=0)
-
-#plt.scatter(X_mean_var[:, 0], X_mean_var[:, 1], c=Y, edgecolors='k', cmap=plt.cm.Paired); plt.show()
+n_pos_to_add = (np.sum(Y_lin==0) - np.sum(Y_lin==1))
+idx_to_duplicate = np.where(Y_lin==1)[0][np.random.randint(0,np.sum(Y_lin==1),n_pos_to_add)]
+X_lin_aug = np.concatenate((X_lin,X_lin[idx_to_duplicate,:]),axis=0)
+Y_lin_aug = np.concatenate((Y_lin,Y_lin[idx_to_duplicate]),axis=0)
 
 #Print feature statistics
-print('Computed ' + str(X.shape[0]) + ' features')
-print('Feature dimension = ' + str(X.shape[1]))
-print('Number of classes = ' + str(np.max(Y)+1))
+print('Computed ' + str(X_lin.shape[0]) + ' features')
+print('Feature dimension = ' + str(X_lin.shape[1]))
+print('Number of classes = ' + str(np.max(Y_lin)+1))
 
-Y0 = [i for i, j in enumerate(Y) if j == 0]
-Y1 = [i for i, j in enumerate(Y) if j == 1]
+Y0 = [i for i, j in enumerate(Y_lin) if j == 0]
+Y1 = [i for i, j in enumerate(Y_lin) if j == 1]
 print('Class 0: ' + str(len(Y0)) + ' samples')
 print('Class 1: ' + str(len(Y1)) + ' samples')
 
@@ -128,25 +145,17 @@ from sklearn.tree import DecisionTreeClassifier
 #my_svm.fit(X,Y)
 
 # we create an instance of the classifier and fit the data
-print('Training LogReg classifier')
-logreg = linear_model.LogisticRegression(C=1)
-#logreg = linear_model.LogisticRegression(C=1, class_weight="balanced")
-logreg.fit(X, Y)
+logreg = linear_model.LogisticRegression(C=7)
 
-print('Training Ridge classifier')
 linreg = linear_model.LinearRegression()
-#linreg = linear_model.Ridge(alpha=1.0)
-linreg.fit(X, Y)
 
-print('Training Adaboost classifier')
-bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), algorithm="SAMME", n_estimators=500)
-bdt.fit(X,Y)
-
-for the_classifier in {linreg,logreg,bdt}:
 #for the_classifier in {linreg,logreg}:
+for the_classifier in {logreg}:
+    print('Training classifier: ' + the_classifier.__class__.__name__)
+    the_classifier.fit(X_lin, Y_lin)
 
     # Predict on the training set
-    Z = the_classifier.predict(X)
+    Z = the_classifier.predict(X_lin)
     thr_pred = 0.5
 
     # Get non-zeros in prediction and grountruth arrays
@@ -155,48 +164,83 @@ for the_classifier in {linreg,logreg,bdt}:
     Z_bin[np.where(Z<thr_pred)[0]] = 0
     Z_bin = Z_bin.astype(float)
 
-    f1_score = metrics.f1_score(Y, Z_bin, average='weighted')
-    conf_mat = metrics.confusion_matrix(Y,Z_bin)
+    f1_score = metrics.f1_score(Y_lin, Z_bin, average='weighted')
+    conf_mat = metrics.confusion_matrix(Y_lin,Z_bin)
     TPR = conf_mat[0][0]/(conf_mat[0][0] + conf_mat[0][1])
     FPR = conf_mat[1][0]/(conf_mat[1][0] + conf_mat[1][1])
     print('Results with classifier: ' + the_classifier.__class__.__name__)
     print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
     print('F1-score = ' + str(f1_score))
 
-my_classifier = logreg
+print("Building CRF graphs")
+X_crf = list()
+Y_crf = list()
+for i in range(n):
+    sys.stdout.write('\r')
+    vertices, edges = hp.make_graph_crf(sp_labels[i])
+    edges_features = hp.make_edge_features(imgs[i],sp_labels[i],edges)
+    X_crf.append((logreg.predict(X[i]).reshape(-1,1), np.asarray(edges), np.asarray(edges_features).reshape(-1,1)))
+    sys.stdout.write("%d/%d" % (i+1, n))
+    sys.stdout.flush()
+sys.stdout.write('\n')
+
+Y_flat = Y
+Y_crf = [np.asarray(Y_flat[i]) for i in range(len(Y_flat))]
+
+print("Training SSVM")
+inference = 'qpbo'
+# first, train on X with directions only:
+crf = EdgeFeatureGraphCRF(inference_method=inference)
+ssvm = OneSlackSSVM(crf, inference_cache=50, C=1., tol=.1, max_iter=500,
+                    n_jobs=4)
+ssvm.fit(X_crf, Y_crf)
+
+print("Refining with SSVM")
+Z_crf = ssvm.predict(X_crf)
+Z_crf_lin =  np.asarray([Z_crf[i][j] for i in range(len(Z_crf)) for j in range(len(Z_crf[i]))])
+Y_crf_lin = np.asarray([Y[i][j] for i in range(len(Y)) for j in range(len(Y[i]))])
+f1_score = metrics.f1_score(Y_crf_lin, Z_crf_lin, average='weighted')
+conf_mat = metrics.confusion_matrix(Y_crf_lin,Z_crf_lin)
+TPR = conf_mat[0][0]/(conf_mat[0][0] + conf_mat[0][1])
+FPR = conf_mat[1][0]/(conf_mat[1][0] + conf_mat[1][1])
+print('Results with classifier: ' + ssvm.__class__.__name__)
+print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+print('F1-score = ' + str(f1_score))
+
 # Run prediction on the img_idx-th image
-img_idx = 10
+img_idx = 0
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
-X_dt = hp.get_features_dt([imgs[img_idx]],canny_sigma,grid_step)
-X_hist = hp.get_features_hist([imgs[img_idx]],10,grid_step)
-X_hough = hp.get_features_hough([imgs[img_idx]],0.4,hough_max_lines,grid_step,canny_sigma,radius=1,threshold=10,line_length=45,line_gap=3)
-X_sift = hp.get_features_sift([imgs[img_idx]],canny_sigma,sift_sigmas,grid_step)
-pca = decomposition.PCA(n_components_pca)
-pca.fit(X_sift)
-X_sift = pca.transform(X_sift)
-Xi = np.concatenate((X_sift, X_hough,X_hist,X_dt),axis=1)
+Xi, sp_labels_i = hp.make_features_sp(the_img,pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
+Zi = logreg.predict(Xi)
+vertices, edges = hp.make_graph_crf(sp_labels[img_idx])
+edges_features = hp.make_edge_features(the_img,sp_labels[img_idx],edges)
+X_crf = (Zi.reshape(-1,1), np.asarray(edges), np.asarray(edges_features).reshape(-1,1))
+Zi_crf = np.asarray(ssvm.predict([X_crf])).ravel()
 
-the_gt_patches = hp.img_crop(the_gt, grid_step, grid_step)
-Yi = np.asarray([hp.value_to_class(the_gt_patches[i],foreground_threshold) for i in range(len(the_gt_patches))])
-Zi = my_classifier.predict(Xi)
+this_y = np.asarray(hp.img_crop_sp(the_gt, sp_labels_i))
+Yi = list()
+for j in range(len(this_y)):
+    Yi.append(np.any(this_y[j]).astype(int))
+Yi = np.asarray(Yi)
 
-
-conf_mat = metrics.confusion_matrix(Yi,Zi)
+conf_mat = metrics.confusion_matrix(Yi,Zi_crf)
 TPR = conf_mat[0][0]/(conf_mat[0][0] + conf_mat[0][1])
 FPR = conf_mat[1][0]/(conf_mat[1][0] + conf_mat[1][1])
+print('Results on image ' + str(img_idx) + ' with classifier: ' + ssvm.__class__.__name__)
 print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+print('F1-score = ' + str(f1_score))
 
 # Display prediction as an image
 w = gt_imgs[img_idx].shape[0]
 h = gt_imgs[img_idx].shape[1]
-predicted_im = hp.label_to_img(w, h, patch_size, patch_size, Zi)
 
+predicted_im = hp.sp_label_to_img(sp_labels_i, Zi_crf)
 img_overlay = color.label2rgb(predicted_im,the_img,alpha=0.5)
 img_over_conc = hp.concatenate_images(img_overlay,color.gray2rgb(gt_imgs[img_idx]))
 predicted_labels = hp.concatenate_images(img_overlay,color.gray2rgb(predicted_im))
 fig1 = plt.figure(figsize=(10, 10)) # create a figure with the default size
 plt.imshow(img_over_conc, cmap='Greys_r');
-plt.title('im ' + str(img_idx) + ', ' +  my_classifier.__class__.__name__ + 'TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+plt.title('im ' + str(img_idx) + ', ' +  ssvm.__class__.__name__ + ' TPR/FPR = ' + str(TPR) + '/' + str(FPR))
 plt.show()
