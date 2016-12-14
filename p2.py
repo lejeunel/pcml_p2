@@ -14,6 +14,12 @@ from matplotlib import pyplot as plt
 from pystruct.models import EdgeFeatureGraphCRF
 from pystruct.learners import OneSlackSSVM
 
+r1 = np.asarray([0, 0]);
+r2 = np.asarray([1, 1]);
+r = r1-r2
+theta = np.arctan2(r[0],r[1])
+print(np.max((np.abs(np.cos(theta)),np.abs(np.sin(theta)))))
+
 #Parameters
 params = dict()
 n = 40 #Num of images for training
@@ -179,7 +185,7 @@ for i in range(n):
     sys.stdout.write('\r')
     vertices, edges = hp.make_graph_crf(sp_labels[i])
     edges_features = hp.make_edge_features(imgs[i],sp_labels[i],edges)
-    X_crf.append((logreg.predict(X[i]).reshape(-1,1), np.asarray(edges), np.asarray(edges_features).reshape(-1,1)))
+    X_crf.append((logreg.predict_proba(X[i]), np.asarray(edges), np.asarray(edges_features).reshape(-1,1)))
     sys.stdout.write("%d/%d" % (i+1, n))
     sys.stdout.flush()
 sys.stdout.write('\n')
@@ -191,7 +197,7 @@ print("Training SSVM")
 inference = 'qpbo'
 # first, train on X with directions only:
 crf = EdgeFeatureGraphCRF(inference_method=inference)
-ssvm = OneSlackSSVM(crf, inference_cache=50, C=1., tol=.1, max_iter=500,
+ssvm = OneSlackSSVM(crf, inference_cache=50, C=2., tol=.1, max_iter=500,
                     n_jobs=4)
 ssvm.fit(X_crf, Y_crf)
 
@@ -213,11 +219,11 @@ the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
 Xi, sp_labels_i = hp.make_features_sp(the_img,pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
-Zi = logreg.predict(Xi)
+Zi = logreg.predict_proba(Xi)
 vertices, edges = hp.make_graph_crf(sp_labels[img_idx])
 edges_features = hp.make_edge_features(the_img,sp_labels[img_idx],edges)
-X_crf = (Zi.reshape(-1,1), np.asarray(edges), np.asarray(edges_features).reshape(-1,1))
-Zi_crf = np.asarray(ssvm.predict([X_crf])).ravel()
+Xi_crf = (Zi, np.asarray(edges), np.asarray(edges_features).reshape(-1,1))
+Zi_crf = np.asarray(ssvm.predict([Xi_crf])).ravel()
 
 this_y = np.asarray(hp.img_crop_sp(the_gt, sp_labels_i))
 Yi = list()
