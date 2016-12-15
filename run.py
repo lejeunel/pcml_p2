@@ -157,22 +157,23 @@ for C in np.array([1, 10, 100, 1000, 10e4]):
 print('cross-validation on SSVM estimator with best logreg estimator')
 for C in np.array([100., 1000.,10e4, 10e5]):
     my_ssvm = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=C,n_jobs=1)
-    scorer = metrics.make_scorer(my_ssvm.score)
     scores = cross_val_score(my_ssvm, X_crf, Y_crf, cv=5)
     print('F-1 score (C, mean +/- 2*std) = ' + str(C) + ', ' + str(np.mean(scores)) + '/' + str(np.std(scores) ))
 
 # Run prediction on the img_idx-th image
-img_idx = 0
+img_idx = 3
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
-the_classifier = my_ssvm
+the_classifier = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=100,n_jobs=1)
+the_classifier.fit(X_crf,Y_crf)
 
 Xi, sp_labels_i = hp.make_features_sp(the_img,pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
 vertices, edges = hp.make_graph_crf(sp_labels[img_idx])
 edges_features = hp.make_edge_features(the_img,sp_labels[img_idx],edges)
-Xi_crf = (Xi, np.asarray(edges), np.asarray(edges_features).reshape(-1,1))
+Xi_crf = [(Xi, np.asarray(edges), np.asarray(edges_features).reshape(-1,1))]
 Zi_crf = np.asarray(the_classifier.predict(Xi_crf)).ravel()
+f1_score = metrics.f1_score(Zi_crf,Y_crf[img_idx])
 
 this_y = np.asarray(hp.img_crop_sp(the_gt, sp_labels_i))
 Yi = list()
