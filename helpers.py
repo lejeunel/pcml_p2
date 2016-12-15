@@ -7,7 +7,6 @@ import sys
 sys.path.append('/usr/lib/python3.5/site-packages')
 import cv2
 from skimage import (color,feature,filters,draw,morphology,segmentation)
-from skimage.future import graph
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
 from sklearn.cluster import KMeans
@@ -15,6 +14,8 @@ from scipy import ndimage
 from skimage.transform import (hough_line, hough_line_peaks,
                                probabilistic_hough_line,rescale)
 from scipy import cluster
+from skimage.filters import gabor_kernel
+from skimage.future import graph
 from pystruct.utils import make_grid_edges, edge_list_to_features
 
 def make_edge_features(img,labels,edges):
@@ -436,3 +437,46 @@ def make_features_sp(img,pca,canny_sigma,slic_comp,slic_segments,hough_rel_thr,h
     X = np.concatenate((X_hough.reshape(-1,1),X_dt.reshape(-1,1),X_rgb,X_sift),axis=1)
 
     return X, labels
+
+"""----------------------tat helpers extra----------------------------------"""
+def img_crop2(im, w, h, overlap = 0):
+    list_patches = []
+    imgwidth = im.shape[0]
+    imgheight = im.shape[1]
+    is_2d = len(im.shape) < 3
+    for i in np.arange(0,imgheight,h*(1-overlap)):
+        for j in np.arange(0,imgwidth,w*(1-overlap)):
+            if is_2d:
+                im_patch = im[j:j+w, i:i+h]
+            else:
+                im_patch = im[j:j+w, i:i+h, :]
+            list_patches.append(im_patch)
+    return list_patches
+
+def compute_feats(image, kernels):
+	feats = np.zeros((len(kernels)*2, 1), dtype=np.float32)
+	for k, kernel in enumerate(kernels):
+		filtered = ndimage.convolve(image, kernel, mode='constant') #,mode='wrap'
+		feats[k*2] = filtered.mean()
+		feats[k*2+1] = filtered.var()
+	return feats #maybe also filtered ?
+
+def match(feats, ref_feats):
+    min_error = np.inf
+    min_i = None
+    for i in range(ref_feats.shape[0]):
+        error = np.sum((feats - ref_feats[i, :])**2)
+        if error < min_error:
+            min_error = error
+            min_i = i
+    return min_i
+
+def get_gabor_kernels(theta_range, sigma_range, freq_range):
+	kernels = []
+	for theta in theta_range:
+		theta = theta / 4. * np.pi
+		for sigma in sigma_range:
+			for frequency in freq_range:
+				kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
+				kernels.append(kernel)
+	return kernels
