@@ -19,6 +19,12 @@ from skimage.future import graph
 from pystruct.utils import make_grid_edges, edge_list_to_features
 
 def make_edge_features(img,labels,edges):
+    """
+    Computes probabilities associated to edges of CRF graphs.
+    They are calculated as L(i,j)/(1+ || si - sj||) where:
+    L(i,j) is the length (in pixels) of the boundary between superpixel i and j,
+    si and sj are respectively the mean colors of superpixels i and j
+    """
 
     img = color.rgb2luv(img)
     edge_features = list()
@@ -39,17 +45,23 @@ def make_edge_features(img,labels,edges):
 
     return edge_features
 
-def make_graph_crf(grid):
+def make_graph_crf(labels):
+    """
+    Makes the vertices and edges.
+    The index of the vertices are given by the values of labels (2D array)
+    Edges connect neighboring labels
+    """
+
     # get unique labels
-    vertices = np.unique(grid)
+    vertices = np.unique(labels)
 
     # map unique labels to [1,...,num_labels]
     reverse_dict = dict(zip(vertices,np.arange(len(vertices))))
-    grid = np.array([reverse_dict[x] for x in grid.flat]).reshape(grid.shape)
+    labels = np.array([reverse_dict[x] for x in labels.flat]).reshape(labels.shape)
 
     # create edges
-    down = np.c_[grid[:-1, :].ravel(), grid[1:, :].ravel()]
-    right = np.c_[grid[:, :-1].ravel(), grid[:, 1:].ravel()]
+    down = np.c_[labels[:-1, :].ravel(), labels[1:, :].ravel()]
+    right = np.c_[labels[:, :-1].ravel(), labels[:, 1:].ravel()]
     all_edges = np.vstack([right, down])
     all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1], :]
     all_edges = np.sort(all_edges,axis=1)
@@ -64,6 +76,9 @@ def make_graph_crf(grid):
     return vertices, edges
 
 def get_features_edges(imgs,grid_step,canny_sigma):
+    """
+    Computes canny edge features (not used9
+    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -74,6 +89,9 @@ def get_features_edges(imgs,grid_step,canny_sigma):
     return patches.reshape(-1,1)
 
 def get_features_rgb(imgs,grid_step=16,labels=None):
+    """
+    Computes canny edge features (not used9
+    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]

@@ -16,6 +16,17 @@
 #+TITLE: Group 97: Road Segmentation
 #+AUTHOR: Laurent Lejeune, Tatiana Fountoukidou, Guillaume de Montauzon
 #+OPTIONS: toc:nil        no default TOC at all
+
+* Related works
+** Road Segmentation in Aerial Images by Exploiting Road Vector Data cite:6602035 
+**  Morphological road segmentation in urban areas from high resolution satellite images cite:gaetano:inria-00618222 
+**  Connected Component-Based Technique for Automatic Extraction of Road Centerline in High Resolution Satellite Images cite:sujatha15_connec_compon_based_techn_autom 
+** Machine Learning Based Road Detection from High Resolution Imagery 
+** Road Extraction Using K-Means Clustering and Morphological Operations cite:maurya2011road 
+
+ \bibliographystyle{ieeetr}
+ \bibliography{refs}
+ \printbibliography
 * Data exploration
 The provided training set contains 100 images of size 400x400 along with their ground-truth. A total of 6 images are discarded because they either show a too small quantity of positive class pixels. 
 Most images are made of grid-like roads, sometimes occluded by trees. 
@@ -26,23 +37,30 @@ The image pixels are first grouped in two different manners:
 * Feature extraction
 Following an exploration of the related litterature, we select a set of features that will be extracted.
 - SIFT (Scale-Invariant Feature Transform) cite:lowe99: This descriptor is used extensively in computer-vision applications. It computes a histogram of oriented gradients on 16x16 windows centered at a keypoint and gives a descriptor of 128 scalar values. The keypoint detection step is not performed, instead we extract the descriptors on a dense grid and encode them in a "bag-of-features" manner through the following steps: 
-  - Based on a sufficiently large number of SIFT descriptors computed on 10 images, we start by fitting a PCA model. We have checked that the explained variance at 60 components is above $99%$.
-  - A codebook is generated on the aforementioned training samples. A codebook is merely a set of K-means clusters that is used to encode the input (compressed) descriptors to integer values.
-    - We then compute a normalized histogram of codes (bag-of-features) in each patch/superpixels. This gives us a single texture feature vector for mid-level regions.
+  1. Based on a sufficiently large number of SIFT descriptors computed on 10 images, we start by fitting a PCA model. We have checked that the explained variance at 60 components is above 99%.
+  2. A codebook is generated on the aforementioned training samples. A codebook is merely a set of K-means clusters that is used to encode the input (compressed) descriptors to integer values.
+  3. We then compute a normalized histogram of codes (bag-of-features) in each segment. This gives us a single texture feature vector for mid-level regions.
 - Hough line transform: This transformation has already been used in a state-of-the-art method cite:2016ISPAr41B3..891L. First, the edge map is computed using a canny edge detector. Given some parameters, a set of lines are extracted on the edge maps and sorted based on their RGB variance, i.e. we want to keep the lines along which the color variations is minimal.
 - Euclidean distance transform. This straightforward transform is used to compute, at each pixel location, the shortest "taxicab" distance to an edge pixel. Again, a canny edge map is used as input.
 * Methods
-Two (several) methods have been implemented and tested. A Conditional Random Field approach will provide a baseline. It will be compared to a Convolution Neural Network appraoch.
-** Conditional Random Field using Structured Support Vector Machine
-   Using a Conditional Random Field model, one can exploit the spatial relations between mid-level regions. Indeed, a patch considered as road gives a strong prior to the "roadness" of its neighboring patches. Our approach consists in predicting the class probabilities of segments
+Two (several) methods have been implemented and tested. A Conditional Random Field approach will provide a baseline. It will be compared to a Convolution Neural Network approach.
+** Refinement using Conditional Random Field
+   Using a Conditional Random Field model, one can exploit the spatial relations between mid-level regions. Indeed, a segment considered as road gives a strong prior on the "roadness" of its neighboring segment. This is formalized as an undirected graph on which the node features, also called unary potentials, contain regression probabilities given by a "segment-wise" estimator. 
+Inspired by cite:fulkerson09, the edge costs are made off of two features: The difference in mean LUV color, and the length of the frontier between two superpixels. This last feature allows to penalize superpixels that are "weakly" connected.
 
-* Litterature review
-** Road Segmentation in Aerial Images by Exploiting Road Vector Data cite:6602035 
-**  Morphological road segmentation in urban areas from high resolution satellite images cite:gaetano:inria-00618222 
-**  Connected Component-Based Technique for Automatic Extraction of Road Centerline in High Resolution Satellite Images cite:sujatha15_connec_compon_based_techn_autom 
-** Machine Learning Based Road Detection from High Resolution Imagery 
-** Road Extraction Using K-Means Clustering and Morphological Operations cite:maurya2011road 
+Formally, structured models aim at maximizing an energy functions of the form:
 
- \bibliographystyle{ieeetr}
- \bibliography{refs}
- \printbibliography
+ \begin{equation}
+ \begin{split}
+E_w(X,Y) &= \sum_{i \in \mathcal{V}} E_{data}(y_i;x_i) + \sum_{i,j \in \mathcal{E}} E_{smooth}(y_i;y_j) \\
+ &= \mathbf{w}^T \psi(X,Y)
+ \end{split}
+ \end{equation}
+
+Where $\mathcal{V}$ is the set of vertices representing a segment, $\mathcal{E}$ are the edges. The data and smoothness term are combined in the joint-features vector $\psi$. A logistic regression model is used for the data term. Following cite:fulkerson09, the pair-wise edges potentials are given by:
+
+ \begin{equation}
+\phi(c_i,c_j|s_i,s_j) = \frac{L(s_i,s_j)}{1+\lVert s_i - s_j \rVert}
+ \end{equation}
+Where $c$ and $s$ are the mean LUV-space colors. The function $L$ expresses the length of the shared boundaries between two segments.
+ 

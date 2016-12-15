@@ -16,12 +16,6 @@ import logregssvm
 from sklearn.model_selection import (GridSearchCV,KFold,cross_val_score)
 from sklearn import (linear_model,preprocessing)
 
-r1 = np.asarray([0, 0]);
-r2 = np.asarray([1, 1]);
-r = r1-r2
-theta = np.arctan2(r[0],r[1])
-print(np.max((np.abs(np.cos(theta)),np.abs(np.sin(theta)))))
-
 #Parameters
 n = 94 #Num of images for training
 grid_step = 16 #keypoints are extracted every grid_step pixels
@@ -42,6 +36,7 @@ hough_radius = 20
 hough_rel_thr = 0.5
 slic_segments = 400
 slic_compactness = 30
+cv_folds = 5
 
 root_dir = "training/"
 image_dir = root_dir + "images/"
@@ -111,7 +106,7 @@ for i in range(n):
     this_y = np.asarray(hp.img_crop_sp(gt_imgs[i], sp_labels[i]))
     Y.append([])
     for j in range(len(this_y)):
-        Y[-1].append(np.any(this_y[j]).astype(int))
+        Y[-1].append((np.sum(this_y[j])/this_y[j].shape[0] > foreground_threshold).astype(int))
     sys.stdout.write("%d/%d" % (i+1, n))
     sys.stdout.flush()
 sys.stdout.write('\n')
@@ -144,21 +139,40 @@ sys.stdout.write('\n')
 
 Y_crf = [np.asarray(Y[i]) for i in range(len(Y))]
 
-#Cross validation with logreg
 print('cross-validation on logistic regression estimator')
 X_logreg =  np.asarray([X_crf[i][0][j] for i in range(len(X_crf)) for j in range(len(X_crf[i][0]))])
 Y_logreg =  np.asarray([Y_crf[i][j] for i in range(len(Y_crf)) for j in range(len(Y_crf[i]))])
 scorer = metrics.make_scorer(metrics.f1_score)
-for C in np.array([1, 10, 100, 1000, 10e4]):
-    logreg = linear_model.LogisticRegression(C=C)
-    scores = cross_val_score(logreg, X_logreg, Y_logreg, cv=5,scoring=scorer)
-    print('F-1 score (C, mean +/- 2*std) = ' + str(C) + ', ' + str(np.mean(scores)) + '/' + str(np.std(scores) ))
+scores_pre = list()
+C = np.logspace(1,5,25)
+for this_C in C:
+    logreg = linear_model.LogisticRegression(C=this_C)
+    scores_pre.append(cross_val_score(logreg, X_logreg, Y_logreg, cv=cv_folds,scoring=scorer))
+    print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_pre[-1])) + '/' + str(np.std(scores_pre[-1]) ))
+scores_pre = np.asarray(scores_pre)
+plt.semilogx(C,np.mean(scores_pre,axis=1),'b');
+plt.semilogx(C,np.mean(scores_pre,axis=1) + np.std(scores_pre,axis=1),'b--');
+plt.semilogx(C,np.mean(scores_pre,axis=1) - np.std(scores_pre,axis=1),'b--');
+plt.xlabel('regularization factor (log10)')
+plt.ylabel('F1-score')
+plt.title('Logistic regression. ' + str(cv_folds) + '-fold cross validation'  )
+plt.show()
 
 print('cross-validation on SSVM estimator with best logreg estimator')
-for C in np.array([100., 1000.,10e4, 10e5]):
-    my_ssvm = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=C,n_jobs=1)
-    scores = cross_val_score(my_ssvm, X_crf, Y_crf, cv=5)
-    print('F-1 score (C, mean +/- 2*std) = ' + str(C) + ', ' + str(np.mean(scores)) + '/' + str(np.std(scores) ))
+scores_crf = list()
+C = np.logspace(1,5,15)
+for this_C in C:
+    my_ssvm = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=this_C,n_jobs=1)
+    scores_crf.append(cross_val_score(my_ssvm, X_crf, Y_crf, cv=cv_folds))
+    print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_crf[-1])) + '/' + str(np.std(scores_crf[-1]) ))
+scores_crf = np.asarray(scores_crf)
+plt.semilogx(C,np.mean(scores,axis=1),'b')
+plt.semilogx(C,np.mean(scores,axis=1) + np.std(scores,axis=1),'b--')
+plt.semilogx(C,np.mean(scores,axis=1) - np.std(scores,axis=1),'b--')
+plt.xlabel('regularization factor (log10)')
+plt.ylabel('F1-score')
+plt.title('SSVM. ' + str(cv_folds) + '-fold cross validation')
+plt.show()
 
 # Run prediction on the img_idx-th image
 img_idx = 3
@@ -173,7 +187,7 @@ vertices, edges = hp.make_graph_crf(sp_labels[img_idx])
 edges_features = hp.make_edge_features(the_img,sp_labels[img_idx],edges)
 Xi_crf = [(Xi, np.asarray(edges), np.asarray(edges_features).reshape(-1,1))]
 Zi_crf = np.asarray(the_classifier.predict(Xi_crf)).ravel()
-f1_score = metrics.f1_score(Zi_crf,Y_crf[img_idx])
+f1_score = metrics.f1_score(Y_crf[img_idx],Zi_crf)
 
 this_y = np.asarray(hp.img_crop_sp(the_gt, sp_labels_i))
 Yi = list()

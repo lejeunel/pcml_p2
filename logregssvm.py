@@ -28,13 +28,13 @@ class LogregSSVM(BaseEstimator):
         Each training sample for X is a tuple (node_features, edges, edge_features), where node_features is a numpy array of node-features (of shape (n_nodes, n_node_features)), edges is a array of edges between nodes, of shape (n_edges, 2) as in GraphCRF, and edge_features is a feature for each edge, given as a numpy array of shape (n_edges, n_edge_features).
         """
 
-        #Make features and ground truths for logreg
+        #Reshape features and ground truths for logreg
         X_feats_lin =  np.asarray([X[i][0][j] for i in range(len(X)) for j in range(len(X[i][0]))])
         Y_lin =  np.asarray([Y[i][j] for i in range(len(Y)) for j in range(len(Y[i]))])
 
         self.logreg.fit(X_feats_lin, Y_lin)
 
-        #Make features and ground truths for ssvm
+        #Reshape features and ground truths for ssvm
         X_crf = [(self.logreg.predict_proba(X[i][0]), np.asarray(X[i][1]), np.asarray(X[i][2]).reshape(-1,1)) for i in range(len(X))]
 
         self.ssvm.fit(X_crf, Y)
