@@ -1,4 +1,4 @@
-% Created 2016-11-27 Sun 21:12
+% Created 2016-12-15 Thu 11:32
 \documentclass[10pt,conference,compsocconf]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -35,16 +35,51 @@
 \begin{document}
 
 \maketitle
-\section{Litterature review}
-\label{sec:orgheadline5}
-\subsection{Road Segmentation in Aerial Images by Exploiting Road Vector Data \cite{6602035}}
+\section{Data exploration}
 \label{sec:orgheadline1}
-\subsection{Morphological road segmentation in urban areas from high resolution satellite images \cite{gaetano:inria-00618222}}
+The provided training set contains 100 images of size 400x400 along with their ground-truth. A total of 6 images are discarded because they either show a too small quantity of positive class pixels. 
+Most images are made of grid-like roads, sometimes occluded by trees. 
+\section{Mid-level segmentations}
 \label{sec:orgheadline2}
-\subsection{Connected Component-Based Technique for Automatic Extraction of Road Centerline in High Resolution Satellite Images \cite{sujatha15_connec_compon_based_techn_autom}}
+The image pixels are first grouped in two different manners:
+\begin{enumerate}
+\item Square patches: The image is divided in non-overlapping patches of size 16x16.
+\item SLIC Superpixels (Simple Linear Iterative Clustering) \cite{achanta12}: Pixels are grouped in mid-level regions in an iterative manner. The algorithm starts from a regular grid of cluster centers and iteratively updates the labels of their neighboring centers based on a distance measure. This method improves over the square patches method because the pixels are already pre-segmented. Their feature vector will therefore be easier to discriminate.
+\end{enumerate}
+\section{Feature extraction}
 \label{sec:orgheadline3}
-\subsection{Machine Learning Based Road Detection from High Resolution Imagery \cite{2016ISPAr41B3..891L}}
+Following an exploration of the related litterature, we select a set of features that will be extracted.
+\begin{itemize}
+\item SIFT (Scale-Invariant Feature Transform) \cite{lowe99}: This descriptor is used extensively in computer-vision applications. It computes a histogram of oriented gradients on 16x16 windows centered at a keypoint and gives a descriptor of 128 scalar values. The keypoint detection step is not performed, instead we extract the descriptors on a dense grid and encode them in a "bag-of-features" manner through the following steps: 
+\begin{itemize}
+\item Based on a sufficiently large number of SIFT descriptors computed on 10 images, we start by fitting a PCA model. We have checked that the explained variance at 60 components is above \(99%\).
+\item A codebook is generated on the aforementioned training samples. A codebook is merely a set of K-means clusters that is used to encode the input (compressed) descriptors to integer values.
+\begin{itemize}
+\item We then compute a normalized histogram of codes (bag-of-features) in each patch/superpixels. This gives us a single texture feature vector for mid-level regions.
+\end{itemize}
+\end{itemize}
+\item Hough line transform: This transformation has already been used in a state-of-the-art method \cite{2016ISPAr41B3..891L}. First, the edge map is computed using a canny edge detector. Given some parameters, a set of lines are extracted on the edge maps and sorted based on their RGB variance, i.e. we want to keep the lines along which the color variations is minimal.
+\item Euclidean distance transform. This straightforward transform is used to compute, at each pixel location, the shortest "taxicab" distance to an edge pixel. Again, a canny edge map is used as input.
+\end{itemize}
+\section{Methods}
+\label{sec:orgheadline5}
+Two (several) methods have been implemented and tested. A Conditional Random Field approach will provide a baseline. It will be compared to a Convolution Neural Network appraoch.
+\subsection{Conditional Random Field using Structured Support Vector Machine}
 \label{sec:orgheadline4}
+Using a Conditional Random Field model, one can exploit the spatial relations between mid-level regions. Indeed, a patch considered as road gives a strong prior to the "roadness" of its neighboring patches. Our approach consists in predicting the class probabilities of segments
+
+\section{Litterature review}
+\label{sec:orgheadline11}
+\subsection{Road Segmentation in Aerial Images by Exploiting Road Vector Data \cite{6602035}}
+\label{sec:orgheadline6}
+\subsection{Morphological road segmentation in urban areas from high resolution satellite images \cite{gaetano:inria-00618222}}
+\label{sec:orgheadline7}
+\subsection{Connected Component-Based Technique for Automatic Extraction of Road Centerline in High Resolution Satellite Images \cite{sujatha15_connec_compon_based_techn_autom}}
+\label{sec:orgheadline8}
+\subsection{Machine Learning Based Road Detection from High Resolution Imagery}
+\label{sec:orgheadline9}
+\subsection{Road Extraction Using K-Means Clustering and Morphological Operations \cite{maurya2011road}}
+\label{sec:orgheadline10}
 
 \bibliographystyle{ieeetr}
 \bibliography{refs}
