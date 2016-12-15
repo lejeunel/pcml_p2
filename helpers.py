@@ -21,21 +21,20 @@ def make_edge_features(img,labels,edges):
 
     img = color.rgb2luv(img)
     edge_features = list()
+    selem = morphology.square(2)
     for i in range(len(edges)):
         mask1 = labels == edges[i][0]
         mask2 = labels == edges[i][1]
         mask1_idx = np.where(mask1)
         mask2_idx = np.where(mask2)
-        center1 = np.asarray(ndimage.measurements.center_of_mass(mask1))
-        center2 = np.asarray(ndimage.measurements.center_of_mass(mask2))
+        mask1_dilate = morphology.binary_dilation(mask1,selem=selem)
+        mask2_dilate = morphology.binary_dilation(mask2,selem=selem)
+        inter_bounds = mask1_dilate*mask2_dilate
         this_pix1 = img[mask1_idx[0],mask1_idx[1],:]
         this_pix2 = img[mask2_idx[0],mask2_idx[1],:]
         denom = 1+np.linalg.norm(np.mean(this_pix1,axis=0)-np.mean(this_pix2,axis=0))
-        r = center1-center2
-        theta = np.arctan2(r[0],r[1])
-        numer = np.max((np.abs(np.cos(theta)),np.abs(np.sin(theta))))
+        numer = np.sum(inter_bounds)
         edge_features.append(numer/(denom))
-        #edge_features.append(1/(1+np.abs((this_mask1[0].shape[0] - this_mask2[0].shape[0]))))
 
     return edge_features
 
