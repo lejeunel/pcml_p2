@@ -89,9 +89,6 @@ def get_features_edges(imgs,grid_step,canny_sigma):
     return patches.reshape(-1,1)
 
 def get_features_rgb(imgs,grid_step=16,labels=None):
-    """
-    Computes canny edge features (not used9
-    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]

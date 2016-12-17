@@ -1,4 +1,4 @@
-% Created 2016-12-15 Thu 15:42
+% Created 2016-12-17 Sat 16:57
 \documentclass[10pt,conference,compsocconf]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -36,6 +36,7 @@
 
 \maketitle
 
+
 \section{Related works}
 \label{sec:orgheadline6}
 \subsection{Road Segmentation in Aerial Images by Exploiting Road Vector Data \cite{6602035}}
@@ -49,13 +50,10 @@
 \subsection{Road Extraction Using K-Means Clustering and Morphological Operations \cite{maurya2011road}}
 \label{sec:orgheadline5}
 
-\bibliographystyle{ieeetr}
-\bibliography{refs}
-\printbibliography
 \section{Data exploration}
 \label{sec:orgheadline7}
-The provided training set contains 100 images of size 400x400 along with their ground-truth. A total of 6 images are discarded because they either show a too small quantity of positive class pixels. 
-Most images are made of grid-like roads, sometimes occluded by trees. 
+The provided training set contains 100 images of size 400x400 along with their ground-truth. A total of 6 images are discarded because they either show a too small quantity of positive class pixels, or some misleading regions such as rail-tracks. 
+We notice that most images are made of grid-like roads, sometimes occluded by trees. 
 \section{Mid-level segmentations}
 \label{sec:orgheadline8}
 The image pixels are first grouped in two different manners:
@@ -65,9 +63,13 @@ The image pixels are first grouped in two different manners:
 \end{enumerate}
 \section{Feature extraction}
 \label{sec:orgheadline9}
-Following an exploration of the related litterature, we select a set of features that will be extracted.
+Following an exploration of the related litterature, we select a set of features to extract.
 \begin{itemize}
-\item SIFT (Scale-Invariant Feature Transform) \cite{lowe99}: This descriptor is used extensively in computer-vision applications. It computes a histogram of oriented gradients on 16x16 windows centered at a keypoint and gives a descriptor of 128 scalar values. The keypoint detection step is not performed, instead we extract the descriptors on a dense grid and encode them in a "bag-of-features" manner through the following steps: 
+\item SIFT (Scale-Invariant Feature Transform) \cite{lowe99}: This descriptor is used extensively in computer-vision applications. It computes a histogram of oriented gradients on 16x16 windows centered at a keypoint and gives a descriptor of 128 scalar values. The keypoint detection step is not performed, instead we extract the descriptors on a dense grid at canonical scale and orientation. As advised in \footnote{\url{https://people.csail.mit.edu/hasinoff/320/sift-notes.txt}
+
+\bibliographystyle{ieeetr}
+\bibliography{refs}
+\printbibliography} to improve illumination invariance, the integer value descriptors are first normalized to unit-norm, ceiled to 0.2, and renormalized to unit-norm. As we require that each segment be represented by a single feature vector, we encode the dense SIFT descriptors contained in a given segment in a "bag-of-features" manner through the following steps: 
 \begin{enumerate}
 \item Based on a sufficiently large number of SIFT descriptors computed on 10 images, we start by fitting a PCA model. We have checked that the explained variance at 60 components is above 99\%.
 \item A codebook is generated on the aforementioned training samples. A codebook is merely a set of K-means clusters that is used to encode the input (compressed) descriptors to integer values.
@@ -79,10 +81,10 @@ Following an exploration of the related litterature, we select a set of features
 \section{Methods}
 \label{sec:orgheadline11}
 Two (several) methods have been implemented and tested. A Conditional Random Field approach will provide a baseline. It will be compared to a Convolution Neural Network approach.
-\subsection{Refinement using Conditional Random Field}
+\subsection{Refinement of generic models using Conditional Random Field}
 \label{sec:orgheadline10}
-   Using a Conditional Random Field model, one can exploit the spatial relations between mid-level regions. Indeed, a segment considered as road gives a strong prior on the "roadness" of its neighboring segment. This is formalized as an undirected graph on which the node features, also called unary potentials, contain regression probabilities given by a "segment-wise" estimator. 
-Inspired by \cite{fulkerson09}, the edge costs are made off of two features: The difference in mean LUV color, and the length of the frontier between two superpixels. This last feature allows to penalize superpixels that are "weakly" connected.
+   Using a Conditional Random Field model, one can leverage the spatial relations between mid-level regions. Indeed, a segment considered as road gives a strong prior on the "roadness" of its neighboring segment. This is formalized as an undirected graph on which the node features are assigned unary potentials. In our case, the unary potentials are given by probability estimates given by generic models such as logistic regression or random forest.
+Inspired by \cite{fulkerson09}, the edge costs are made off of two features: The difference in mean LUV color, and the number of pixels that separate two segments (length of separating path). This last feature allows to penalize segments that are "weakly" connected. Also, we have verified visually that roads tend to be composed of regular chains of square-like segments, thereby justifying that choice.
 
 Formally, structured models aim at maximizing an energy functions of the form:
 
@@ -93,7 +95,7 @@ E_w(X,Y) &= \sum_{i \in \mathcal{V}} E_{data}(y_i;x_i) + \sum_{i,j \in \mathcal{
  \end{split}
  \end{equation}
 
-Where \(\mathcal{V}\) is the set of vertices representing a segment, \(\mathcal{E}\) are the edges. The data and smoothness term are combined in the joint-features vector \(\psi\). A logistic regression model is used for the data term. Following \cite{fulkerson09}, the pair-wise edges potentials are given by:
+Where \(\mathcal{V}\) is the set of vertices representing a segment, \(\mathcal{E}\) are the edges. The data and smoothness term are combined in the joint-features vector \(\psi\). Any probabilistic regression model can be used for the data term. Following \cite{fulkerson09}, the pair-wise edges potentials are given by:
 
  \begin{equation}
 \phi(c_i,c_j|s_i,s_j) = \frac{L(s_i,s_j)}{1+\lVert s_i - s_j \rVert}

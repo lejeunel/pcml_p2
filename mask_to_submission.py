@@ -6,7 +6,7 @@ import matplotlib.image as mpimg
 import re
 
 # assign a label to a patch
-def patch_to_label(patch,foreground_threshold):
+def patch_to_label(patch,foreground_threshold=0.25):
     df = np.mean(patch)
     if df > foreground_threshold:
         return 1
@@ -24,8 +24,7 @@ def mask_to_submission_strings(image_filename):
             label = patch_to_label(patch)
             yield("{:03d}_{}_{},{}".format(img_number, j, i, label))
 
-
-def masks_to_submission(submission_filename, *image_filenames):
+def masks_to_submission(submission_filename, image_filenames):
     """Converts images into a submission file"""
     with open(submission_filename, 'w') as f:
         f.write('id,prediction\n')
@@ -38,6 +37,6 @@ if __name__ == '__main__':
     image_filenames = []
     for i in range(1, 51):
         image_filename = 'training/groundtruth/satImage_' + '%.3d' % i + '.png'
-        print image_filename
+        print(image_filename)
         image_filenames.append(image_filename)
     masks_to_submission(submission_filename, *image_filenames)

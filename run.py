@@ -15,6 +15,7 @@ from pystruct.learners import OneSlackSSVM
 import logregssvm
 from sklearn.model_selection import (GridSearchCV,KFold,cross_val_score)
 from sklearn import (linear_model,preprocessing)
+import mask_to_submission as submit
 
 #Parameters
 n = 94 #Num of images for training
@@ -175,7 +176,7 @@ plt.title('SSVM. ' + str(cv_folds) + '-fold cross validation')
 plt.show()
 
 # Run prediction on the img_idx-th image
-img_idx = 3
+img_idx = 6
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
@@ -214,3 +215,65 @@ fig1 = plt.figure(figsize=(10, 10)) # create a figure with the default size
 plt.imshow(img_over_conc, cmap='Greys_r');
 plt.title('im ' + str(img_idx) + ', ' +  the_classifier.__class__.__name__ + ' TPR/FPR = ' + str(TPR) + '/' + str(FPR))
 plt.show()
+
+#get test set
+files_test = list()
+imgs_test = list()
+test_dir = 'test_set_images'
+test_sub_dirs = os.listdir(test_dir)
+for i in range(len(test_sub_dirs)):
+    this_dir = os.path.join(os.path.join(test_dir,test_sub_dirs[i]))
+    files_test.append(os.path.join(this_dir,os.listdir(this_dir)[0]))
+
+test_imgs = [hp.load_image(files_test[i]) for i in range(len(files_test))]
+
+#Fit and predict test set
+my_ssvm = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=100,n_jobs=1)
+print('Fitting using whole training set')
+my_ssvm.fit(X_crf,Y_crf)
+
+print('Extracting features on ' + str(len(test_imgs))+ ' test images')
+X_test = list()
+sp_labels_test = list()
+for i in range(len(test_imgs)):
+    sys.stdout.write('\r')
+    this_X, this_sp_labels = hp.make_features_sp(test_imgs[i],pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
+    X_test.append(this_X)
+    sp_labels_test.append(this_sp_labels)
+    sys.stdout.write("%d/%d" % (i+1, len(test_imgs)))
+    sys.stdout.flush()
+sys.stdout.write('\n')
+
+print('Building CRF graphs on ' + str(len(test_imgs))+ ' test images')
+X_crf_test = list()
+for i in range(len(test_imgs)):
+    sys.stdout.write('\r')
+    vertices, edges = hp.make_graph_crf(sp_labels_test[i])
+    edges_features = hp.make_edge_features(test_imgs[i],sp_labels_test[i],edges)
+    X_crf_test.append((X_test[i], np.asarray(edges), np.asarray(edges_features).reshape(-1,1)))
+    sys.stdout.write("%d/%d" % (i+1, len(test_imgs)))
+    sys.stdout.flush()
+sys.stdout.write('\n')
+
+print('Predicting on test set')
+Z_crf_test = my_ssvm.predict(X_crf_test)
+
+test_dir_res= 'test_set_res'
+print('Writing segmentations on test set')
+#im = hp.sp_label_to_img(sp_labels_test[0],Z_crf_test[0])
+#im_overlay = color.label2rgb(im,test_imgs[0],alpha=0.5)
+#plt.imshow(im_overlay); plt.show()
+assert os.path.isdir(test_dir_res), "Directory " + test_dir_res + " must exist!"
+
+res_paths = list()
+for i in range(len(Z_crf_test)):
+    this_out_filename = os.path.splitext(os.path.basename(files_test[i]))[0]
+    this_im = hp.sp_label_to_img(sp_labels_test[i],Z_crf_test[i])
+    this_im_arr = Image.fromarray((this_im * 255).astype(np.uint8))
+    this_path = os.path.join(test_dir_res,this_out_filename + '.png')
+    this_im_arr.save(this_path)
+    res_paths.append(this_path)
+
+print('Writing submission file')
+submit.masks_to_submission('submission.csv',res_paths)
+print('Done')
