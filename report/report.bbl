@@ -1,5 +1,6 @@
 \begin{thebibliography}{10}
 
+<<<<<<< HEAD
 \bibitem{6602035}
 J.~Yuan and A.~M. Cheriyadat, ``Road segmentation in aerial images by
   exploiting road vector data,'' in {\em 2013 Fourth International Conference
@@ -32,12 +33,15 @@ D.~G. Lowe, ``Object recognition from local scale-invariant features,'' in {\em
   Proceedings of the Seventh IEEE International Conference on Computer Vision},
   vol.~2, pp.~1150--1157 vol.2, 1999.
 
+=======
+>>>>>>> 07a83a6287b66b9e977a2c6fd1e81675b74d7eee
 \bibitem{2016ISPAr41B3..891L}
 Y.~{Lv}, G.~{Wang}, and X.~{Hu}, ``{Machine Learning Based Road Detection from
   High Resolution Imagery},'' {\em ISPRS - International Archives of the
   Photogrammetry, Remote Sensing and Spatial Information Sciences},
   pp.~891--898, June 2016.
 
+<<<<<<< HEAD
 \bibitem{tsochantaridis05}
 I.~Tsochantaridis, T.~Joachims, T.~Hofmann, and Y.~Altun, ``Large margin
   methods for structured and interdependent output variables,'' {\em Journal of
@@ -52,5 +56,10 @@ B.~Fulkerson, A.~Vedaldi, and S.~Soatto, ``Class segmentation and object
 A.~C. M{\"u}ller and S.~Behnke, ``Pystruct: learning structured prediction in
   python.,'' {\em Journal of Machine Learning Research}, vol.~15, no.~1,
   pp.~2055--2060, 2014.
+=======
+\bibitem{unet}
+O.~Ronneberger, P.~Fischer, and T.~Brox, ``U-net: Convolutional networks for
+  biomedical image segmentation,'' {\em arXiv preprint arXiv:1505.04597}, 2015.
+>>>>>>> 07a83a6287b66b9e977a2c6fd1e81675b74d7eee
 
 \end{thebibliography}

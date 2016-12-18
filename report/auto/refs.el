@@ -8,8 +8,7 @@
     "sujatha15_connec_compon_based_techn_autom"
     "2016ISPAr41B3..891L"
     "maurya2011road"
-    "lowe99"
-    "achanta12"
+    "unet"
     "fulkerson09"
     "tsochantaridis05"
     "muller14"))
