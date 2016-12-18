@@ -60,14 +60,10 @@ The image pixels are first grouped in two different manners:
 \item SLIC Superpixels (Simple Linear Iterative Clustering) \cite{achanta12}: Pixels are grouped in mid-level regions in an iterative manner. The algorithm starts from a regular grid of cluster centers and iteratively updates the labels of their neighboring centers based on a distance measure. This method improves over the square patches method because the pixels are already pre-segmented. Their feature vector will therefore be easier to discriminate.
 \end{enumerate}
 \section{Feature extraction}
-\label{sec:orgheadline9}
 Following an exploration of the related litterature, we select a set of features to extract.
 \begin{itemize}
-\item SIFT (Scale-Invariant Feature Transform) \cite{lowe99}: This descriptor is used extensively in computer-vision applications. It computes a histogram of oriented gradients on 16x16 windows centered at a keypoint and gives a descriptor of 128 scalar values. The keypoint detection step is not performed, instead we extract the descriptors on a dense grid at canonical scale and orientation. As advised in \footnote{\url{https://people.csail.mit.edu/hasinoff/320/sift-notes.txt}
-
-\bibliographystyle{ieeetr}
-\bibliography{refs}
-\printbibliography} to improve illumination invariance, the integer value descriptors are first normalized to unit-norm, ceiled to 0.2, and renormalized to unit-norm. As we require that each segment be represented by a single feature vector, we encode the dense SIFT descriptors contained in a given segment in a "bag-of-features" manner through the following steps: 
+\item SIFT (Scale-Invariant Feature Transform) \cite{lowe99}: This descriptor is used extensively in computer-vision applications. It computes a histogram of oriented gradients on 16x16 windows centered at a keypoint and gives a descriptor of 128 scalar values. The keypoint detection step is not performed, instead we extract the descriptors on a dense grid at canonical scale and orientation. As advised in \footnote{\url{https://people.csail.mit.edu/hasinoff/320/sift-notes.txt}}
+ to improve illumination invariance, the integer value descriptors are first normalized to unit-norm, ceiled to 0.2, and renormalized to unit-norm. As we require that each segment be represented by a single feature vector, we encode the dense SIFT descriptors contained in a given segment in a "bag-of-features" manner through the following steps: 
 \begin{enumerate}
 \item Based on a sufficiently large number of SIFT descriptors computed on 10 images, we start by fitting a PCA model. We have checked that the explained variance at 60 components is above 99\%.
 \item A codebook is generated on the aforementioned training samples. A codebook is merely a set of K-means clusters that is used to encode the input (compressed) descriptors to integer values.
@@ -89,7 +85,6 @@ Example of a hough transform. Left: Input image with the ground-truth overlay. R
 \label{sec:orgheadline12}
 Two (several) methods have been implemented and tested. A structured model will provide a baseline. It will be compared to a Convolution Neural Network approach.
 \subsection{Refinement of generic models using structured SVM}
-\label{sec:orgheadline11}
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.5\textwidth]{pics/ex_graph.png}
