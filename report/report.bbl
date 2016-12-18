@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{6602035}
 J.~Yuan and A.~M. Cheriyadat, ``Road segmentation in aerial images by
@@ -16,10 +16,41 @@ C.~Sujatha and D.~Selvathi, ``Connected component-based technique for automatic
   extraction of road centerline in high resolution satellite images,'' {\em J
   Image Video Proc}, vol.~2015, no.~1, p.~8, 2015.
 
+\bibitem{maurya2011road}
+R.~Maurya, P.~Gupta, and A.~S. Shukla, ``Road extraction using k-means
+  clustering and morphological operations,'' in {\em Image Information
+  Processing (ICIIP), 2011 International Conference on}, pp.~1--6, IEEE, 2011.
+
+\bibitem{achanta12}
+R.~Achanta, A.~Shaji, K.~Smith, A.~Lucchi, P.~Fua, and S.~S{\"u}sstrunk, ``Slic
+  superpixels compared to state-of-the-art superpixel methods,'' {\em IEEE
+  transactions on pattern analysis and machine intelligence}, vol.~34, no.~11,
+  pp.~2274--2282, 2012.
+
+\bibitem{lowe99}
+D.~G. Lowe, ``Object recognition from local scale-invariant features,'' in {\em
+  Proceedings of the Seventh IEEE International Conference on Computer Vision},
+  vol.~2, pp.~1150--1157 vol.2, 1999.
+
 \bibitem{2016ISPAr41B3..891L}
 Y.~{Lv}, G.~{Wang}, and X.~{Hu}, ``{Machine Learning Based Road Detection from
   High Resolution Imagery},'' {\em ISPRS - International Archives of the
   Photogrammetry, Remote Sensing and Spatial Information Sciences},
   pp.~891--898, June 2016.
+
+\bibitem{tsochantaridis05}
+I.~Tsochantaridis, T.~Joachims, T.~Hofmann, and Y.~Altun, ``Large margin
+  methods for structured and interdependent output variables,'' {\em Journal of
+  Machine Learning Research}, vol.~6, no.~Sep, pp.~1453--1484, 2005.
+
+\bibitem{fulkerson09}
+B.~Fulkerson, A.~Vedaldi, and S.~Soatto, ``Class segmentation and object
+  localization with superpixel neighborhoods,'' in {\em 2009 IEEE 12th
+  International Conference on Computer Vision}, pp.~670--677, Sept 2009.
+
+\bibitem{muller14}
+A.~C. M{\"u}ller and S.~Behnke, ``Pystruct: learning structured prediction in
+  python.,'' {\em Journal of Machine Learning Research}, vol.~15, no.~1,
+  pp.~2055--2060, 2014.
 
 \end{thebibliography}
