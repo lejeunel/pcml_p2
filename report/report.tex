@@ -1,4 +1,4 @@
-% Created 2016-12-17 Sat 16:57
+% Created 2016-12-18 Sun 21:07
 \documentclass[10pt,conference,compsocconf]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -75,16 +75,32 @@ Following an exploration of the related litterature, we select a set of features
 \item A codebook is generated on the aforementioned training samples. A codebook is merely a set of K-means clusters that is used to encode the input (compressed) descriptors to integer values.
 \item We then compute a normalized histogram of codes (bag-of-features) in each segment. This gives us a single texture feature vector for mid-level regions.
 \end{enumerate}
-\item Hough line transform: This transformation has already been used in a state-of-the-art method \cite{2016ISPAr41B3..891L}. First, the edge map is computed using a canny edge detector. Given some parameters, a set of lines are extracted on the edge maps and sorted based on their RGB variance, i.e. we want to keep the lines along which the color variations is minimal.
-\item Euclidean distance transform. This straightforward transform is used to compute, at each pixel location, the shortest "taxicab" distance to an edge pixel. Again, a canny edge map is used as input.
+\item Hough line transform: This transformation has already been used in a state-of-the-art method \cite{2016ISPAr41B3..891L}. First, the edge map is computed using a canny edge detector. Given some parameters, a set of lines are extracted on the edge maps and sorted based on their RGB variance, i.e. we want to keep the lines along which the color variations is minimal. An example is shown on figure \ref{fig:orgparagraph1}. As feature, we take the mean value of the hough map on the segment.
+\item Euclidean distance transform. This straightforward transform is used to compute, at each pixel location, the shortest "taxicab" distance to an edge pixel. Using as input the canny edge map, we expect this feature to discriminate cluttered regions such as those containing blocks of buildings where the Euclidean distance tends to be smaller. The mean value over the segment is used.
+\item Mean RGB value. Roads tend to have greyish colors.
 \end{itemize}
+To summarize, our feature extraction procedure provides a total of 65 features per superpixel.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.5\textwidth]{pics/ex_hough.eps}
+\caption{\label{fig:orgparagraph1}
+Example of a hough transform. Left: Input image with the ground-truth overlay. Right: 20 lines with lowest color variance.}
+\end{figure}
 \section{Methods}
+\label{sec:orgheadline12}
+Two (several) methods have been implemented and tested. A structured model will provide a baseline. It will be compared to a Convolution Neural Network approach.
+\subsection{Refinement of generic models using structured SVM}
 \label{sec:orgheadline11}
-Two (several) methods have been implemented and tested. A Conditional Random Field approach will provide a baseline. It will be compared to a Convolution Neural Network approach.
-\subsection{Refinement of generic models using Conditional Random Field}
-\label{sec:orgheadline10}
-   Using a Conditional Random Field model, one can leverage the spatial relations between mid-level regions. Indeed, a segment considered as road gives a strong prior on the "roadness" of its neighboring segment. This is formalized as an undirected graph on which the node features are assigned unary potentials. In our case, the unary potentials are given by probability estimates given by generic models such as logistic regression or random forest.
-Inspired by \cite{fulkerson09}, the edge costs are made off of two features: The difference in mean LUV color, and the number of pixels that separate two segments (length of separating path). This last feature allows to penalize segments that are "weakly" connected. Also, we have verified visually that roads tend to be composed of regular chains of square-like segments, thereby justifying that choice.
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.5\textwidth]{pics/ex_graph.png}
+\caption{\label{fig:orgparagraph2}
+Example of a superpixel-segmented image with connecting edges.}
+\end{figure}
+
+   Using structured models \cite{tsochantaridis05}, one can leverage the spatial relations between mid-level regions. As shown on figure \ref{fig:orgparagraph2},a segment considered as road gives a strong prior on the "roadness" of its neighboring segment. This is formalized as an undirected graph on which the node features are assigned unary potentials. In our case, the unary potentials are given by probability estimates given by generic models such as logistic regression or random forest.
+Inspired by \cite{fulkerson09}, the edge costs are made off of two features: The difference in mean LUV color, and the number of pixels that separate two segments (length of separating path). This last feature allows to penalize segments that are "weakly" connected. Indeed, we have verified visually that roads tend to be composed of regular chains of square-like segments, thereby justifying that choice.
 
 Formally, structured models aim at maximizing an energy functions of the form:
 
@@ -95,10 +111,15 @@ E_w(X,Y) &= \sum_{i \in \mathcal{V}} E_{data}(y_i;x_i) + \sum_{i,j \in \mathcal{
  \end{split}
  \end{equation}
 
-Where \(\mathcal{V}\) is the set of vertices representing a segment, \(\mathcal{E}\) are the edges. The data and smoothness term are combined in the joint-features vector \(\psi\). Any probabilistic regression model can be used for the data term. Following \cite{fulkerson09}, the pair-wise edges potentials are given by:
+Where \(\mathcal{V}\) is the set of vertices representing a segment, \(\mathcal{E}\) are the edges. The data and smoothness term are combined in the joint-features vector \(\psi\). The variable \(y\) represents the structured labels. In our setup, any probabilistic regression model (logistic regression, random forest,\ldots{}) can be used for the data term. Following \cite{fulkerson09}, the pair-wise edges potentials are given by:
 
  \begin{equation}
 \phi(c_i,c_j|s_i,s_j) = \frac{L(s_i,s_j)}{1+\lVert s_i - s_j \rVert}
  \end{equation}
 Where \(c\) and \(s\) are the mean LUV-space colors. The function \(L\) expresses the length of the shared boundaries between two segments.
+\begin{enumerate}
+\item Algorithm
+\label{sec:orgheadline10}
+The provided code relies on the pyStruct package \cite{muller14}, which implements the cutting-plane algorithm proposed by Tsochantaridis et al \cite{tsochantaridis05}.
+\end{enumerate}
 \end{document}

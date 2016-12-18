@@ -12,9 +12,10 @@ from skimage.future import graph
 from matplotlib import pyplot as plt
 from pystruct.models import EdgeFeatureGraphCRF
 from pystruct.learners import OneSlackSSVM
-import logregssvm
+import ssvm
 from sklearn.model_selection import (GridSearchCV,KFold,cross_val_score)
 from sklearn import (linear_model,preprocessing)
+from sklearn.ensemble import RandomForestClassifier
 import mask_to_submission as submit
 
 #Parameters
@@ -35,7 +36,7 @@ hough_threshold = 1
 hough_canny = 1
 hough_radius = 20
 hough_rel_thr = 0.5
-slic_segments = 400
+slic_segments = 600
 slic_compactness = 30
 cv_folds = 5
 
@@ -68,7 +69,28 @@ the_gt = gt_imgs[idx]
 img_and_gt = color.label2rgb(the_gt.astype(bool),the_img)
 hough = hp.make_hough(the_img,0.5,25,sig_canny=1,radius=20,threshold=1,line_length=100,line_gap=3)
 hough_img = hp.concatenate_images(img_and_gt,color.rgb2gray(hough))
-plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation'); plt.show()
+plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation');
+plt.savefig('ex_hough.eps')
+plt.show()
+
+idx = 0
+labels = segmentation.slic(imgs[idx], compactness=30, n_segments=slic_segments)
+vertices, edges = hp.make_graph_crf(labels)
+# compute region centers:
+gridx, gridy = np.mgrid[:imgs[0].shape[0], :imgs[0].shape[1]]
+centers = dict()
+for v in vertices:
+    centers[v] = [gridy[labels == v].mean(), gridx[labels == v].mean()]
+
+# plot labels
+plt.imshow(color.label2rgb(labels,imgs[idx],kind='avg'))
+plt.autoscale(False)
+# overlay graph:
+for edge in edges:
+    plt.plot([centers[edge[0]][0],centers[edge[1]][0]],
+             [centers[edge[0]][1],centers[edge[1]][1]],'w',alpha=0.3)
+plt.savefig('ex_graph.png')
+plt.show()
 
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then fit for dimensionality reduction.
 print('Extracting SIFT features')
@@ -83,6 +105,7 @@ plt.plot(pca.explained_variance_ratio_, linewidth=2)
 plt.xlabel('n_components')
 plt.ylabel('explained_variance_')
 plt.title('PCA  compression of SIFT descriptors')
+plt.savefig('ex_pca_explained_variance.eps')
 plt.show()
 
 print('Generating SIFT codebook on ' + str(X_sift.shape[0]) + ' samples  with ' + str(n_components_pca) + ' clusters')
@@ -140,15 +163,17 @@ sys.stdout.write('\n')
 
 Y_crf = [np.asarray(Y[i]) for i in range(len(Y))]
 
-print('cross-validation on logistic regression estimator')
-X_logreg =  np.asarray([X_crf[i][0][j] for i in range(len(X_crf)) for j in range(len(X_crf[i][0]))])
-Y_logreg =  np.asarray([Y_crf[i][j] for i in range(len(Y_crf)) for j in range(len(Y_crf[i]))])
+
+gen_estim = linear_model.LogisticRegression()
+print('cross-validation on generic estimator')
+X_gen =  np.asarray([X_crf[i][0][j] for i in range(len(X_crf)) for j in range(len(X_crf[i][0]))])
+Y_gen =  np.asarray([Y_crf[i][j] for i in range(len(Y_crf)) for j in range(len(Y_crf[i]))])
 scorer = metrics.make_scorer(metrics.f1_score)
 scores_pre = list()
 C = np.logspace(1,5,25)
 for this_C in C:
-    logreg = linear_model.LogisticRegression(C=this_C)
-    scores_pre.append(cross_val_score(logreg, X_logreg, Y_logreg, cv=cv_folds,scoring=scorer))
+    gen_estim.set_params(C = this_C)
+    scores_pre.append(cross_val_score(gen_estim, X_gen, Y_gen, cv=cv_folds,scoring=scorer))
     print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_pre[-1])) + '/' + str(np.std(scores_pre[-1]) ))
 scores_pre = np.asarray(scores_pre)
 plt.semilogx(C,np.mean(scores_pre,axis=1),'b');
@@ -159,17 +184,18 @@ plt.ylabel('F1-score')
 plt.title('Logistic regression. ' + str(cv_folds) + '-fold cross validation'  )
 plt.show()
 
-print('cross-validation on SSVM estimator with best logreg estimator')
+print('cross-validation on SSVM estimator')
+gen_estim = RandomForestClassifier(n_estimators=50,max_depth=10)
 scores_crf = list()
 C = np.logspace(1,5,15)
 for this_C in C:
-    my_ssvm = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=this_C,n_jobs=1)
+    my_ssvm = ssvm.MySSVM(gen_estim,C_ssvm=this_C,n_jobs=1)
     scores_crf.append(cross_val_score(my_ssvm, X_crf, Y_crf, cv=cv_folds))
     print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_crf[-1])) + '/' + str(np.std(scores_crf[-1]) ))
 scores_crf = np.asarray(scores_crf)
-plt.semilogx(C,np.mean(scores,axis=1),'b')
-plt.semilogx(C,np.mean(scores,axis=1) + np.std(scores,axis=1),'b--')
-plt.semilogx(C,np.mean(scores,axis=1) - np.std(scores,axis=1),'b--')
+plt.semilogx(C,np.mean(scores_crf,axis=1),'b')
+plt.semilogx(C,np.mean(scores_crf,axis=1) + np.std(scores_crf,axis=1),'b--')
+plt.semilogx(C,np.mean(scores_crf,axis=1) - np.std(scores_crf,axis=1),'b--')
 plt.xlabel('regularization factor (log10)')
 plt.ylabel('F1-score')
 plt.title('SSVM. ' + str(cv_folds) + '-fold cross validation')
@@ -180,7 +206,7 @@ img_idx = 6
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
-the_classifier = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=100,n_jobs=1)
+the_classifier = ssvm.MySSVM(gen_estim,C_ssvm=2000,n_jobs=1)
 the_classifier.fit(X_crf,Y_crf)
 
 Xi, sp_labels_i = hp.make_features_sp(the_img,pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
@@ -228,7 +254,7 @@ for i in range(len(test_sub_dirs)):
 test_imgs = [hp.load_image(files_test[i]) for i in range(len(files_test))]
 
 #Fit and predict test set
-my_ssvm = logregssvm.LogregSSVM(C_logreg=100.,C_ssvm=100,n_jobs=1)
+my_ssvm = ssvm.MySSVM(gen_estim,C_ssvm=1900,n_jobs=1)
 print('Fitting using whole training set')
 my_ssvm.fit(X_crf,Y_crf)
 
