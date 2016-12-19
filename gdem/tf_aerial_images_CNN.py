@@ -37,7 +37,7 @@ NUM_LABELS = 2
 TRAINING_SIZE = 90
 #VALIDATION_SIZE = 5  # Size of the validation set.
 SEED = 66478  # Set to None for random seed.
-BATCH_SIZE = 32 # 64
+BATCH_SIZE = 16 # 64
 NUM_EPOCHS = 5
 RESTORE_MODEL = False # If True, restore existing model instead of training a new one
 RECORDING_STEP = 1000
@@ -45,7 +45,7 @@ RECORDING_STEP = 1000
 # Set image patch size in pixels
 # IMG_PATCH_SIZE should be a multiple of 4
 # image size should be an integer multiple of this number!
-IMG_PATCH_SIZE = 8
+IMG_PATCH_SIZE = 4
 
 tf.app.flags.DEFINE_string('train_dir', 'training/',
                            """Directory where to write event logs """
@@ -92,6 +92,7 @@ def extract_data(filename, num_images):
 
         else:
             print ('File ' + image_filename + ' does not exist')
+    #pdb.set_trace()
 
     num_images = len(imgs)
     IMG_WIDTH = imgs[0].shape[0]
