@@ -3,12 +3,14 @@ Baseline for machine learning project on road segmentation.
 This simple baseline consits of a CNN with two convolutional+pooling layers with a soft-max loss
 
 Credits: Aurelien Lucchi, ETH Zürich
+modified GTM
 """
 
 
 
 import gzip
 import os
+
 import sys
 import urllib
 import matplotlib.image as mpimg
@@ -21,15 +23,21 @@ import tensorflow.python.platform
 import numpy
 import tensorflow as tf
 import pdb
+import matplotlib.pyplot as plt
 
+from skimage.filters import threshold_adaptive,gaussian
+from skimage.color import rgb2gray,gray2rgb
+from skimage.transform import rotate
+from sklearn.metrics import precision_score,recall_score,f1_score,confusion_matrix
+from skimage.feature import canny
 
 NUM_CHANNELS = 3 # RGB images
 PIXEL_DEPTH = 255
 NUM_LABELS = 2
-TRAINING_SIZE = 80
-VALIDATION_SIZE = 5  # Size of the validation set.
+TRAINING_SIZE = 90
+#VALIDATION_SIZE = 5  # Size of the validation set.
 SEED = 66478  # Set to None for random seed.
-BATCH_SIZE = 16 # 64
+BATCH_SIZE = 32 # 64
 NUM_EPOCHS = 5
 RESTORE_MODEL = False # If True, restore existing model instead of training a new one
 RECORDING_STEP = 1000
@@ -37,7 +45,7 @@ RECORDING_STEP = 1000
 # Set image patch size in pixels
 # IMG_PATCH_SIZE should be a multiple of 4
 # image size should be an integer multiple of this number!
-IMG_PATCH_SIZE = 4
+IMG_PATCH_SIZE = 8
 
 tf.app.flags.DEFINE_string('train_dir', 'training/',
                            """Directory where to write event logs """
@@ -54,9 +62,12 @@ def img_crop(im, w, h):
         for j in range(0,imgwidth,w):
             if is_2d:
                 im_patch = im[j:j+w, i:i+h]
+
             else:
                 im_patch = im[j:j+w, i:i+h, :]
+
             list_patches.append(im_patch)
+
     return list_patches
 
 def extract_data(filename, num_images):
@@ -71,6 +82,14 @@ def extract_data(filename, num_images):
             print ('Loading ' + image_filename)
             img = mpimg.imread(image_filename)
             imgs.append(img)
+            imgr=rotate(img,90)
+            imgs.append(imgr)
+            imgr=rotate(img,180)
+            imgs.append(imgr)
+            imgr=rotate(img,270)
+            imgs.append(imgr)
+            imgs.append(gray2rgb(canny(rgb2gray(img),sigma=1)))
+
         else:
             print ('File ' + image_filename + ' does not exist')
 
@@ -80,9 +99,10 @@ def extract_data(filename, num_images):
     N_PATCHES_PER_IMAGE = (IMG_WIDTH/IMG_PATCH_SIZE)*(IMG_HEIGHT/IMG_PATCH_SIZE)
 
     img_patches = [img_crop(imgs[i], IMG_PATCH_SIZE, IMG_PATCH_SIZE) for i in range(num_images)]
+
     data = [img_patches[i][j] for i in range(len(img_patches)) for j in range(len(img_patches[i]))]
 
-    return numpy.asarray(data)
+    return numpy.asarray(data,dtype=numpy.float32)
 
 # Assign a label to a patch v
 def value_to_class(v):
@@ -103,6 +123,13 @@ def extract_labels(filename, num_images):
         if os.path.isfile(image_filename):
             print ('Loading ' + image_filename)
             img = mpimg.imread(image_filename)
+            gt_imgs.append(img)
+            imgr=rotate(img,90)
+            gt_imgs.append(imgr)
+            imgr=rotate(img,180)
+            gt_imgs.append(imgr)
+            imgr=rotate(img,270)
+            gt_imgs.append(imgr)
             gt_imgs.append(img)
         else:
             print ('File ' + image_filename + ' does not exist')
@@ -153,6 +180,22 @@ def label_to_img(imgwidth, imgheight, w, h, labels):
             array_labels[j:j+w, i:i+h] = l
             idx = idx + 1
     return array_labels
+#convert pixel value to a one or 0
+def pixel_to_label(img):
+    imgwidth=img.shape[0]
+    imgheight=img.shape[1]
+
+    array_labels = numpy.zeros([imgwidth, imgheight])
+
+    for i in range(0,imgheight):
+        for j in range(0,imgwidth):
+            if img[i][j] > 0.5:
+                l = 1
+            else:
+                l = 0
+            array_labels[i, j] = l
+
+    return array_labels
 
 def img_float_to_uint8(img):
     rimg = img - numpy.min(img)
@@ -201,7 +244,7 @@ def main(argv=None):  # pylint: disable=unused-argument
     # Extract it into numpy arrays.
     train_data = extract_data(train_data_filename, TRAINING_SIZE)
     train_labels = extract_labels(train_labels_filename, TRAINING_SIZE)
-    #pdb.set_trace()
+
     num_epochs = NUM_EPOCHS
 
     c0 = 0
@@ -220,9 +263,10 @@ def main(argv=None):  # pylint: disable=unused-argument
     new_indices = idx0[0:min_c] + idx1[0:min_c]
     print (len(new_indices))
     print (train_data.shape)
+
     train_data = train_data[new_indices,:,:,:]
     train_labels = train_labels[new_indices]
-    #pdb.set_trace()
+
 
     train_size = train_labels.shape[0]
 
@@ -252,24 +296,24 @@ def main(argv=None):  # pylint: disable=unused-argument
     conv1_weights = tf.Variable(
         tf.truncated_normal([5, 5, NUM_CHANNELS, 32],  # 5x5 filter, depth 32.
                             stddev=0.1,
-                            seed=SEED))
+                            seed=SEED,dtype=tf.float32))
     print("conv1_weights",conv1_weights)
     conv1_biases = tf.Variable(tf.zeros([32]))
     conv2_weights = tf.Variable(
         tf.truncated_normal([5, 5, 32, 64],
                             stddev=0.1,
-                            seed=SEED))
-    conv2_biases = tf.Variable(tf.constant(0.1, shape=[64]))
+                            seed=SEED,dtype=tf.float32))
+    conv2_biases = tf.Variable(tf.constant(0.1, shape=[64],dtype=tf.float32))
     fc1_weights = tf.Variable(  # fully connected, depth 512.
         tf.truncated_normal([int(IMG_PATCH_SIZE / 4 * IMG_PATCH_SIZE / 4 * 64), 512],
                             stddev=0.1,
-                            seed=SEED))
-    fc1_biases = tf.Variable(tf.constant(0.1, shape=[512]))
+                            seed=SEED,dtype=tf.float32))
+    fc1_biases = tf.Variable(tf.constant(0.1, shape=[512],dtype=tf.float32))
     fc2_weights = tf.Variable(
         tf.truncated_normal([512, NUM_LABELS],
                             stddev=0.1,
-                            seed=SEED))
-    fc2_biases = tf.Variable(tf.constant(0.1, shape=[NUM_LABELS]))
+                            seed=SEED,dtype=tf.float32))
+    fc2_biases = tf.Variable(tf.constant(0.1, shape=[NUM_LABELS],dtype=tf.float32))
 
     # Make an image summary for 4d tensor image with index idx
     def get_image_summary(img, idx = 0):
@@ -297,8 +341,8 @@ def main(argv=None):  # pylint: disable=unused-argument
 
     # Get prediction for given input image
     def get_prediction(img):
-        data = numpy.asarray(img_crop(img, IMG_PATCH_SIZE, IMG_PATCH_SIZE))
-        data_node = tf.constant(data)
+        data = numpy.asarray(img_crop(img, IMG_PATCH_SIZE, IMG_PATCH_SIZE),dtype=numpy.float32)
+        data_node = tf.constant(data,dtype=tf.float32)
         output = tf.nn.softmax(model(data_node))
         output_prediction = s.run(output)
         img_prediction = label_to_img(img.shape[0], img.shape[1], IMG_PATCH_SIZE, IMG_PATCH_SIZE, output_prediction)
@@ -308,8 +352,9 @@ def main(argv=None):  # pylint: disable=unused-argument
     def get_groundtruth_img(gt_idx):
 
         imageid = "satImage_%.3d" % gt_idx
-        image_filename = train_labels_filename + imageid + ".png"
 
+        image_filename = train_labels_filename + imageid + ".png"
+        print(image_filename)
         img = mpimg.imread(image_filename)
         return img
 
@@ -337,6 +382,19 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         return oimg
 
+    def gaussian_filter(img):
+
+        #pdb.set_trace()
+        gaussian_img = gaussian(img,sigma=2.5,mode='reflect')
+        #binary_image1=threshold_adaptive(binary_image1,3)
+        thresh=0.55
+        gaussian_img[[gaussian_img<thresh]]=0
+        gaussian_img[[gaussian_img>=thresh]]=1
+        return gaussian_img.astype(numpy.uint8)
+
+
+
+
     # We will replicate the model structure for the training subgraph, as well
     # as the evaluation subgraphs, while sharing the trainable parameters.
     def model(data, train=False):
@@ -344,6 +402,7 @@ def main(argv=None):  # pylint: disable=unused-argument
         # 2D convolution, with 'SAME' padding (i.e. the output feature map has
         # the same size as the input). Note that {strides} is a 4D array whose
         # shape matches the data layout: [image index, y, x, depth].
+        #pdb.set_trace()
         conv = tf.nn.conv2d(data,
                             conv1_weights,
                             strides=[1, 1, 1, 1],
@@ -386,8 +445,8 @@ def main(argv=None):  # pylint: disable=unused-argument
         hidden = tf.nn.relu(tf.matmul(reshape, fc1_weights) + fc1_biases)
         # Add a 50% dropout during training only. Dropout also scales
         # activations such that no rescaling is needed at evaluation time.
-        #if train:
-        #    hidden = tf.nn.dropout(hidden, 0.5, seed=SEED)
+        if train:
+            hidden = tf.nn.dropout(hidden, 0.5, seed=SEED)
         out = tf.matmul(hidden, fc2_weights) + fc2_biases
 
         if train == True:
@@ -538,21 +597,36 @@ def main(argv=None):  # pylint: disable=unused-argument
             #oimg.save(prediction_training_dir + "overlay_" + str(i) + ".png")
         print ("Running prediction on test set")
         acc_sum=[]
+        y_true=[]
+        y_pred=[]
         prediction_training_dir = data_dir+"CNNpredictions_test/"
         if not os.path.isdir(prediction_training_dir):
             os.mkdir(prediction_training_dir)
         for i in range( TRAINING_SIZE+1,101):
             pimg = get_prediction_with_groundtruth(train_data_filename, i)
+            #pimg=gaussian_filter(pimg)
+
             Image.fromarray(pimg).save(prediction_training_dir + "prediction_" + str(i) + ".png")
             if train_data_filename==data_dir + 'images/':
                 Image.fromarray(pimg).save(new_images_dir + "satimage_{:03d}".format(i)  + ".png")
             #oimg = get_prediction_with_overlay(train_data_filename, i)
             #oimg.save(prediction_training_dir + "overlay_" + str(i) + ".png")
             #pdb.set_trace()
-            acc=tf.contrib.metrics.accuracy(tf.pack(tf.squeeze(tf.image.rgb_to_grayscale(numpy.int_(pimg)))),tf.pack(numpy.int_(get_groundtruth_img(1)))).eval()
+            #plt.imshow(pimg)
+            #plt.show()
+            y_true=numpy.hstack((y_true,pixel_to_label(get_groundtruth_img(i)).flatten()))
+            y_pred=numpy.hstack((y_pred,pixel_to_label(rgb2gray(pimg)).flatten()))
+            acc=tf.contrib.metrics.accuracy(tf.pack(tf.squeeze(tf.image.rgb_to_grayscale(numpy.int_(pimg)))),tf.pack(numpy.int_(get_groundtruth_img(i)))).eval()
             acc_sum.append(acc)
             print("accuracy : {:3f}".format(acc))
             print("accuracy mean : {:3f}".format(numpy.asarray(acc_sum).mean()))
+        #pdb.set_trace()
+        print ("Precision", precision_score(y_true, y_pred))
+        print ("Recall", recall_score(y_true, y_pred))
+        print ("f1_score", f1_score(y_true, y_pred))
+        print ("confusion_matrix")
+        print (confusion_matrix(y_true, y_pred))
+        #fpr, tpr, tresholds = sk.metrics.roc_curve(y_true, y_pred)
 
 if __name__ == '__main__':
     tf.app.run()
