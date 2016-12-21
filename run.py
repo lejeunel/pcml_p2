@@ -71,7 +71,7 @@ hough = hp.make_hough(the_img,0.5,25,sig_canny=1,radius=20,threshold=1,line_leng
 hough_img = hp.concatenate_images(img_and_gt,color.rgb2gray(hough))
 plt.imshow(hough_img); plt.title('thresholding, hough transform, binary dilation');
 plt.savefig('ex_hough.eps')
-plt.show()
+#plt.show()
 
 idx = 0
 labels = segmentation.slic(imgs[idx], compactness=30, n_segments=slic_segments)
@@ -90,7 +90,7 @@ for edge in edges:
     plt.plot([centers[edge[0]][0],centers[edge[1]][0]],
              [centers[edge[0]][1],centers[edge[1]][1]],'w',alpha=0.3)
 plt.savefig('ex_graph.png')
-plt.show()
+#plt.show()
 
 #features are extracted from n_im_pca images on a dense grid (grid_step). PCA is then fit for dimensionality reduction.
 print('Extracting SIFT features')
@@ -106,7 +106,7 @@ plt.xlabel('n_components')
 plt.ylabel('explained_variance_')
 plt.title('PCA  compression of SIFT descriptors')
 plt.savefig('ex_pca_explained_variance.eps')
-plt.show()
+#plt.show()
 
 print('Generating SIFT codebook on ' + str(X_sift.shape[0]) + ' samples  with ' + str(n_components_pca) + ' clusters')
 codebook, distortion = cluster.vq.kmeans(X_sift, n_components_pca,thresh=1)
@@ -170,51 +170,81 @@ X_gen =  np.asarray([X_crf[i][0][j] for i in range(len(X_crf)) for j in range(le
 Y_gen =  np.asarray([Y_crf[i][j] for i in range(len(Y_crf)) for j in range(len(Y_crf[i]))])
 scorer = metrics.make_scorer(metrics.f1_score)
 scores_pre = list()
-C = np.logspace(1,5,25)
-for this_C in C:
+C_pre = np.logspace(-3,7,40)
+for this_C in C_pre:
     gen_estim.set_params(C = this_C)
     scores_pre.append(cross_val_score(gen_estim, X_gen, Y_gen, cv=cv_folds,scoring=scorer))
     print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_pre[-1])) + '/' + str(np.std(scores_pre[-1]) ))
 scores_pre = np.asarray(scores_pre)
-plt.semilogx(C,np.mean(scores_pre,axis=1),'b');
-plt.semilogx(C,np.mean(scores_pre,axis=1) + np.std(scores_pre,axis=1),'b--');
-plt.semilogx(C,np.mean(scores_pre,axis=1) - np.std(scores_pre,axis=1),'b--');
-plt.xlabel('regularization factor (log10)')
-plt.ylabel('F1-score')
-plt.title('Logistic regression. ' + str(cv_folds) + '-fold cross validation'  )
-plt.show()
 
 print('cross-validation on SSVM estimator')
-gen_estim = RandomForestClassifier(n_estimators=50,max_depth=10)
+gen_estim = linear_model.LogisticRegression(C = 10e-2)
 scores_crf = list()
-C = np.logspace(1,5,15)
-for this_C in C:
-    my_ssvm = ssvm.MySSVM(gen_estim,C_ssvm=this_C,n_jobs=1)
+C_crf = np.logspace(-3,5,15)
+for this_C in C_crf:
+    my_ssvm = ssvm.MySSVM(gen_estim,C_ssvm=this_C,inference='qpbo',n_jobs=1)
     scores_crf.append(cross_val_score(my_ssvm, X_crf, Y_crf, cv=cv_folds))
     print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_crf[-1])) + '/' + str(np.std(scores_crf[-1]) ))
 scores_crf = np.asarray(scores_crf)
-plt.semilogx(C,np.mean(scores_crf,axis=1),'b')
-plt.semilogx(C,np.mean(scores_crf,axis=1) + np.std(scores_crf,axis=1),'b--')
-plt.semilogx(C,np.mean(scores_crf,axis=1) - np.std(scores_crf,axis=1),'b--')
+
+print('cross-validation on SSVM estimator with Random Forest')
+gen_estim = RandomForestClassifier(n_estimators=50,max_depth=10)
+scores_crf_rf = list()
+C_crf_rf = np.logspace(-3,5,15)
+for this_C in C_crf_rf:
+    my_ssvm = ssvm.MySSVM(gen_estim,C_ssvm=this_C,inference='qpbo',n_jobs=1)
+    scores_crf_rf.append(cross_val_score(my_ssvm, X_crf, Y_crf, cv=cv_folds))
+    print('F-1 score (C, mean +/- 2*std) = ' + str(this_C) + ', ' + str(np.mean(scores_crf_rf[-1])) + '/' + str(np.std(scores_crf_rf[-1]) ))
+scores_crf_rf = np.asarray(scores_crf_rf)
+
+plt.semilogx(C_pre,np.mean(scores_pre,axis=1),'b',label='LogReg')
+plt.semilogx(C_pre,np.mean(scores_pre,axis=1) + np.std(scores_pre,axis=1),'b--')
+plt.semilogx(C_pre,np.mean(scores_pre,axis=1) - np.std(scores_pre,axis=1),'b--')
+plt.semilogx(C_crf,np.mean(scores_crf,axis=1),'r',label='LogReg + SSVM')
+plt.semilogx(C_crf,np.mean(scores_crf,axis=1) + np.std(scores_crf_rf,axis=1),'r--')
+plt.semilogx(C_crf,np.mean(scores_crf,axis=1) - np.std(scores_crf_rf,axis=1),'r--')
+plt.semilogx(C_crf_rf,np.mean(scores_crf_rf,axis=1),'g',label='Random Forest + SSVM')
+plt.semilogx(C_crf_rf,np.mean(scores_crf_rf,axis=1) + np.std(scores_crf_rf,axis=1),'g--')
+plt.semilogx(C_crf_rf,np.mean(scores_crf_rf,axis=1) - np.std(scores_crf_rf,axis=1),'g--')
 plt.xlabel('regularization factor (log10)')
 plt.ylabel('F1-score')
-plt.title('SSVM. ' + str(cv_folds) + '-fold cross validation')
+plt.title(str(cv_folds) + '-fold cross validation')
+plt.legend(loc='bottom right')
+plt.savefig('cross_val_ssvm.png')
 plt.show()
 
 # Run prediction on the img_idx-th image
-img_idx = 6
+img_idx = 1
 the_img = imgs[img_idx]
 the_gt = gt_imgs[img_idx]
 
-the_classifier = ssvm.MySSVM(gen_estim,C_ssvm=2000,n_jobs=1)
-the_classifier.fit(X_crf,Y_crf)
+#Train with everything except img_idx img
+X_gen_train =  np.asarray([X_crf[i][0][j] for i in range(len(X_crf)) for j in range(len(X_crf[i][0])) if(i!= img_idx)])
+Y_gen_train =  np.asarray([Y_crf[i][j] for i in range(len(Y_crf)) for j in range(len(Y_crf[i])) if(i != img_idx)])
+X_crf_train = [X_crf[i] for i in range(len(X_crf)) if(i != img_idx)]
+Y_crf_train = [Y_crf[i] for i in range(len(Y_crf)) if(i != img_idx)]
 
-Xi, sp_labels_i = hp.make_features_sp(the_img,pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
+gen_estim_rf = RandomForestClassifier(n_estimators=50,max_depth=10)
+gen_estim_logreg = linear_model.LogisticRegression(C = 10e-2)
+my_ssvm = ssvm.MySSVM(gen_estim_rf,C_ssvm=1,n_jobs=1)
+print('Fitting all models')
+my_ssvm.fit(X_crf,Y_crf)
+gen_estim_rf.fit(X_gen_train,Y_gen_train)
+gen_estim_logreg.fit(X_gen_train,Y_gen_train)
+
+print('Making features on unseen image: ' + str(img_idx))
+Xi_gen, sp_labels_i = hp.make_features_sp(the_img,pca,canny_sigma,slic_compactness,slic_segments,hough_rel_thr,hough_max_lines,hough_canny,hough_radius,hough_threshold,hough_line_length,hough_line_gap,codebook)
 vertices, edges = hp.make_graph_crf(sp_labels[img_idx])
 edges_features = hp.make_edge_features(the_img,sp_labels[img_idx],edges)
-Xi_crf = [(Xi, np.asarray(edges), np.asarray(edges_features).reshape(-1,1))]
-Zi_crf = np.asarray(the_classifier.predict(Xi_crf)).ravel()
-f1_score = metrics.f1_score(Y_crf[img_idx],Zi_crf)
+
+print('Predicting all models on unseen image: ' + str(img_idx))
+Xi_crf = [(Xi_gen, np.asarray(edges), np.asarray(edges_features).reshape(-1,1))]
+Zi_crf = np.asarray(my_ssvm.predict(Xi_crf)).ravel()
+Zi_gen_logreg = np.asarray(gen_estim_logreg.predict(Xi_gen)).ravel()
+Zi_gen_rf = np.asarray(gen_estim_rf.predict(Xi_gen)).ravel()
+f1_score_ssvm = metrics.f1_score(Y_crf[img_idx],Zi_crf)
+f1_score_logreg = metrics.f1_score(Y_crf[img_idx],Zi_gen_logreg)
+f1_score_rf = metrics.f1_score(Y_crf[img_idx],Zi_gen_rf)
 
 this_y = np.asarray(hp.img_crop_sp(the_gt, sp_labels_i))
 Yi = list()
@@ -222,24 +252,37 @@ for j in range(len(this_y)):
     Yi.append(np.any(this_y[j]).astype(int))
 Yi = np.asarray(Yi)
 
-conf_mat = metrics.confusion_matrix(Yi,Zi_crf)
-TPR = conf_mat[0][0]/(conf_mat[0][0] + conf_mat[0][1])
-FPR = conf_mat[1][0]/(conf_mat[1][0] + conf_mat[1][1])
-print('Results on image ' + str(img_idx) + ' with classifier: ' + the_classifier.__class__.__name__)
-print('TPR/FPR = ' + str(TPR) + '/' + str(FPR))
-print('F1-score = ' + str(f1_score))
+print('Results on image ' + str(img_idx) + ' with logreg ')
+print('F1-score = ' + str(f1_score_logreg))
+print('Results on image ' + str(img_idx) + ' with RF ')
+print('F1-score = ' + str(f1_score_rf))
+print('Results on image ' + str(img_idx) + ' with refined RF')
+print('F1-score = ' + str(f1_score_ssvm))
 
 # Display prediction as an image
 w = gt_imgs[img_idx].shape[0]
 h = gt_imgs[img_idx].shape[1]
 
-predicted_im = hp.sp_label_to_img(sp_labels_i, Zi_crf)
-img_overlay = color.label2rgb(predicted_im,the_img,alpha=0.5)
-img_over_conc = hp.concatenate_images(img_overlay,color.gray2rgb(gt_imgs[img_idx]))
-predicted_labels = hp.concatenate_images(img_overlay,color.gray2rgb(predicted_im))
-fig1 = plt.figure(figsize=(10, 10)) # create a figure with the default size
-plt.imshow(img_over_conc, cmap='Greys_r');
-plt.title('im ' + str(img_idx) + ', ' +  the_classifier.__class__.__name__ + ' TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+predicted_im_logreg = hp.sp_label_to_img(sp_labels_i, Zi_gen_logreg)
+predicted_im_rf = hp.sp_label_to_img(sp_labels_i, Zi_gen_rf)
+predicted_im_ssvm = hp.sp_label_to_img(sp_labels_i, Zi_crf)
+img_overlay_logreg = color.label2rgb(predicted_im_logreg,the_img,alpha=0.5)
+img_overlay_rf = color.label2rgb(predicted_im_rf,the_img,alpha=0.5)
+img_overlay_ssvm = color.label2rgb(predicted_im_ssvm,the_img,alpha=0.5)
+plt.subplot(221) # create a figure with the default size
+plt.imshow(img_overlay_logreg);
+plt.axis('off')
+plt.subplot(222) # create a figure with the default size
+plt.imshow(img_overlay_rf);
+plt.axis('off')
+plt.subplot(223) # create a figure with the default size
+plt.imshow(img_overlay_ssvm);
+plt.axis('off')
+plt.subplot(224) # create a figure with the default size
+plt.imshow(1-the_gt)
+plt.axis('off')
+#plt.title('im ' + str(img_idx) + ', ' +  the_classifier.__class__.__name__ + ' TPR/FPR = ' + str(TPR) + '/' + str(FPR))
+plt.savefig('prediction.png')
 plt.show()
 
 #get test set
