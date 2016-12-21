@@ -544,9 +544,10 @@ def main(argv=None):  # pylint: disable=unused-argument
         print ("f1_score", f1_score(y_true, y_pred))
         print ("confusion_matrix")
         print (confusion_matrix(y_true, y_pred))
-        
+
         print ("Running prediction on test set")
         #acc_sum=[]
+        
         y_true=[]
         y_pred=[]
         prediction_training_dir = data_dir+"CNNpredictions_test/"
