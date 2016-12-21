@@ -7,7 +7,7 @@ from sklearn import (linear_model,svm,preprocessing,metrics)
 class MySSVM(BaseEstimator):
     """An example of classifier"""
 
-    def __init__(self, prob_estimator, C_ssvm=1., inference='qpbo',inference_cache=50,tol=1.,max_iter=200,n_jobs=1):
+    def __init__(self, prob_estimator, C_ssvm=1., inference='ad3',inference_cache=50,tol=1.,max_iter=200,n_jobs=1):
         """
         Called when initializing the classifier
         """

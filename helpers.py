@@ -140,6 +140,9 @@ def get_features_hist(imgs,n_bins,grid_step):
 
 
 def distance_transform_edge(img,edge_sigma=1):
+    """
+    Computes the taxicab distance transform on binary array.
+    """
 
     edge_map = feature.canny(img,sigma=edge_sigma)
     dt = ndimage.distance_transform_cdt(~edge_map,metric='taxicab')
@@ -147,6 +150,9 @@ def distance_transform_edge(img,edge_sigma=1):
     return dt
 
 def distance_transform(mat,edge_sigma=1):
+    """
+    Computes the taxicab distance transform on binary array.
+    """
 
     dt = ndimage.distance_transform_cdt(mat,metric='taxicab')
 
@@ -167,6 +173,9 @@ def my_thr(img,rel_thr,sigma):
     return img_thr
 
 def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3,labels=None):
+    """
+    This is a wrapper function on make_hough that processes a list of images.
+    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -183,6 +192,9 @@ def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=
         return patches.reshape(-1,1)
 
 def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
+    """
+    Extracts Hough lines from image. Lines are sorted according to the RGB variance of pixels. max_n_lines are returned.
+    """
 
     #Hough-lines extractor
     elem = morphology.disk(1)
@@ -220,6 +232,10 @@ def recreate_image(codebook, labels, w, h):
     return image
 
 def kmeans_img(img,n_clusters):
+    """
+    Performs kmeans clustering (vector quantization) on input image using K=n_clusters.
+    """
+
     # Load Image and transform to a 2D numpy array.
     w, h, d = original_shape = tuple(img.shape)
     assert d == 3
@@ -241,6 +257,9 @@ def kmeans_img(img,n_clusters):
     return recreate_image(kmeans.cluster_centers_, labels, w, h)
 
 def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step=16,return_kps=False,labels=None):
+    """
+    This is a wrapper function on get_sift_densely that processes a list of images.
+    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -256,6 +275,10 @@ def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step=16,return_kps=False
         return X_sift
 
 def get_sift_densely(img,step=1,sigmas=None,mode='neighborhood',subsampl_step = 2,macro_length=2,return_kps=False):
+    """
+    Extract SIFT descriptors on a dense grid. The neighborhood option allows to concatenate several SIFT descriptor sampled around a keypoint. That option was tested but not retained (slow and non-effective).
+
+    """
 
     def do_it(img,step):
         sift = cv2.xfeatures2d.SIFT_create(sigma=1)
@@ -299,6 +322,9 @@ def load_image(infilename):
     return data
 
 def rgb_remove_green(img):
+    """
+    Removes the green channel.
+    """
     img[:,:,1] = np.zeros((img.shape[0],img.shape[1]))
     return img
 
@@ -325,6 +351,9 @@ def concatenate_images(img, gt_img):
     return cimg
 
 def img_crop_sp(im, labels):
+    """
+    Returns list of pixel values (array) contained in labels
+    """
 
     h = im.shape[0]
     w = im.shape[1]
@@ -437,6 +466,9 @@ def prepare_data(X):
 
 def make_features_sp(img,pca,canny_sigma,slic_comp,slic_segments,hough_rel_thr,hough_max_lines,hough_canny, hough_radius, hough_threshold, hough_line_length, hough_line_gap,codebook):
 
+    """
+    Extracts features on superpixel-segmented image.
+    """
     sift_bow = list()
     labels = segmentation.slic(img, compactness=slic_comp, n_segments=slic_segments)
     X_hough = np.asarray(get_features_hough([img],hough_rel_thr,hough_max_lines, 1,hough_canny,hough_radius,hough_threshold , hough_line_length,hough_line_gap,labels = [labels]))
