@@ -45,7 +45,7 @@ RECORDING_STEP = 1000
 # Set image patch size in pixels
 # IMG_PATCH_SIZE should be a multiple of 4
 # image size should be an integer multiple of this number!
-IMG_PATCH_SIZE = 4
+IMG_PATCH_SIZE = 20
 
 tf.app.flags.DEFINE_string('train_dir', 'training/',
                            """Directory where to write event logs """
@@ -152,22 +152,6 @@ def error_rate(predictions, labels):
         numpy.sum(numpy.argmax(predictions, 1) == numpy.argmax(labels, 1)) /
         predictions.shape[0])
 
-# Write predictions from neural network to a file
-def write_predictions_to_file(predictions, labels, filename):
-    max_labels = numpy.argmax(labels, 1)
-    max_predictions = numpy.argmax(predictions, 1)
-    file = open(filename, "w")
-    n = predictions.shape[0]
-    for i in range(0, n):
-        file.write(max_labels(i) + ' ' + max_predictions(i))
-    file.close()
-
-# Print predictions from neural network
-def print_predictions(predictions, labels):
-    max_labels = numpy.argmax(labels, 1)
-    max_predictions = numpy.argmax(predictions, 1)
-    print (str(max_labels) + ' ' + str(max_predictions))
-
 # Convert array of labels to an image
 def label_to_img(imgwidth, imgheight, w, h, labels):
     array_labels = numpy.zeros([imgwidth, imgheight])
@@ -245,6 +229,8 @@ def main(argv=None):  # pylint: disable=unused-argument
     # Extract it into numpy arrays.
     train_data = extract_data(train_data_filename, TRAINING_SIZE)
     train_labels = extract_labels(train_labels_filename, TRAINING_SIZE)
+    print("train_data shape" ,  train_data.shape)
+    print("train_labels shape",train_labels.shape)
 
     num_epochs = NUM_EPOCHS
 
@@ -292,13 +278,13 @@ def main(argv=None):  # pylint: disable=unused-argument
     train_all_data_node = tf.constant(train_data)
 
     # The variables below hold all the trainable weights. They are passed an
-    # initial value which will be assigned when when we call:
+    # initial value which will be assigned when we call:
     # {tf.initialize_all_variables().run()}
     conv1_weights = tf.Variable(
         tf.truncated_normal([5, 5, NUM_CHANNELS, 32],  # 5x5 filter, depth 32.
                             stddev=0.1,
                             seed=SEED,dtype=tf.float32))
-    print("conv1_weights",conv1_weights)
+    #print("conv1_weights",conv1_weights)
     conv1_biases = tf.Variable(tf.zeros([32]))
     conv2_weights = tf.Variable(
         tf.truncated_normal([5, 5, 32, 64],
@@ -316,29 +302,6 @@ def main(argv=None):  # pylint: disable=unused-argument
                             seed=SEED,dtype=tf.float32))
     fc2_biases = tf.Variable(tf.constant(0.1, shape=[NUM_LABELS],dtype=tf.float32))
 
-    # Make an image summary for 4d tensor image with index idx
-    def get_image_summary(img, idx = 0):
-        V = tf.slice(img, (0, 0, 0, idx), (1, -1, -1, 1))
-        img_w = img.get_shape().as_list()[1]
-        img_h = img.get_shape().as_list()[2]
-        min_value = tf.reduce_min(V)
-        V = V - min_value
-        max_value = tf.reduce_max(V)
-        V = V / (max_value*PIXEL_DEPTH)
-        V = tf.reshape(V, (img_w, img_h, 1))
-        V = tf.transpose(V, (2, 0, 1))
-        V = tf.reshape(V, (-1, img_w, img_h, 1))
-        return V
-
-    # Make an image summary for 3d tensor image with index idx
-    def get_image_summary_3d(img):
-        V = tf.slice(img, (0, 0, 0), (1, -1, -1))
-        img_w = img.get_shape().as_list()[1]
-        img_h = img.get_shape().as_list()[2]
-        V = tf.reshape(V, (img_w, img_h, 1))
-        V = tf.transpose(V, (2, 0, 1))
-        V = tf.reshape(V, (-1, img_w, img_h, 1))
-        return V
 
     # Get prediction for given input image
     def get_prediction(img):
@@ -382,19 +345,6 @@ def main(argv=None):  # pylint: disable=unused-argument
         oimg = make_img_overlay(img, img_prediction)
 
         return oimg
-
-    def gaussian_filter(img):
-
-        #pdb.set_trace()
-        gaussian_img = gaussian(img,sigma=2.5,mode='reflect')
-        #binary_image1=threshold_adaptive(binary_image1,3)
-        thresh=0.55
-        gaussian_img[[gaussian_img<thresh]]=0
-        gaussian_img[[gaussian_img>=thresh]]=1
-        return gaussian_img.astype(numpy.uint8)
-
-
-
 
     # We will replicate the model structure for the training subgraph, as well
     # as the evaluation subgraphs, while sharing the trainable parameters.
@@ -450,18 +400,7 @@ def main(argv=None):  # pylint: disable=unused-argument
             hidden = tf.nn.dropout(hidden, 0.5, seed=SEED)
         out = tf.matmul(hidden, fc2_weights) + fc2_biases
 
-        if train == True:
-            summary_id = '_0'
-            s_data = get_image_summary(data)
-            filter_summary0 = tf.image_summary('summary_data' + summary_id, s_data)
-            s_conv = get_image_summary(conv)
-            filter_summary2 = tf.image_summary('summary_conv' + summary_id, s_conv)
-            s_pool = get_image_summary(pool)
-            filter_summary3 = tf.image_summary('summary_pool' + summary_id, s_pool)
-            s_conv2 = get_image_summary(conv2)
-            filter_summary4 = tf.image_summary('summary_conv2' + summary_id, s_conv2)
-            s_pool2 = get_image_summary(pool2)
-            filter_summary5 = tf.image_summary('summary_pool2' + summary_id, s_pool2)
+
 
         return out
 
@@ -563,8 +502,6 @@ def main(argv=None):  # pylint: disable=unused-argument
                         summary_writer.add_summary(summary_str, step)
                         summary_writer.flush()
 
-                        # print_predictions(predictions, batch_labels)
-
                         print ('Epoch %.2f' % (float(step) * BATCH_SIZE / train_size))
                         print ('Minibatch loss: %.3f, learning rate: %.6f' % (l, lr))
                         print ('Minibatch error: %.1f%%' % error_rate(predictions,
@@ -583,6 +520,8 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         #pdb.set_trace()
         print ("Running prediction on training set")
+        y_true=[]
+        y_pred=[]
         prediction_training_dir = data_dir+"CNNpredictions_training/"
         new_images_dir=data_dir+"CNNnewimages/"
         if not os.path.isdir(prediction_training_dir):
@@ -594,10 +533,20 @@ def main(argv=None):  # pylint: disable=unused-argument
             Image.fromarray(pimg).save(prediction_training_dir + "prediction_" + str(i) + ".png")
             if train_data_filename==data_dir + 'images/':
                 Image.fromarray(pimg).save(new_images_dir + "satimage_{:03d}".format(i)  + ".png")
+            y_true=numpy.hstack((y_true,pixel_to_label(get_groundtruth_img(i)).flatten()))
+            y_pred=numpy.hstack((y_pred,pixel_to_label(rgb2gray(pimg)).flatten()))
+
             #oimg = get_prediction_with_overlay(train_data_filename, i)
             #oimg.save(prediction_training_dir + "overlay_" + str(i) + ".png")
+        print(y_true.shape,y_pred.shape)
+        print ("Precision", precision_score(y_true, y_pred))
+        print ("Recall", recall_score(y_true, y_pred))
+        print ("f1_score", f1_score(y_true, y_pred))
+        print ("confusion_matrix")
+        print (confusion_matrix(y_true, y_pred))
+        
         print ("Running prediction on test set")
-        acc_sum=[]
+        #acc_sum=[]
         y_true=[]
         y_pred=[]
         prediction_training_dir = data_dir+"CNNpredictions_test/"
@@ -605,7 +554,7 @@ def main(argv=None):  # pylint: disable=unused-argument
             os.mkdir(prediction_training_dir)
         for i in range( TRAINING_SIZE+1,101):
             pimg = get_prediction_with_groundtruth(train_data_filename, i)
-            #pimg=gaussian_filter(pimg)
+            #pdb.set_trace()
 
             Image.fromarray(pimg).save(prediction_training_dir + "prediction_" + str(i) + ".png")
             if train_data_filename==data_dir + 'images/':
@@ -617,11 +566,9 @@ def main(argv=None):  # pylint: disable=unused-argument
             #plt.show()
             y_true=numpy.hstack((y_true,pixel_to_label(get_groundtruth_img(i)).flatten()))
             y_pred=numpy.hstack((y_pred,pixel_to_label(rgb2gray(pimg)).flatten()))
-            acc=tf.contrib.metrics.accuracy(tf.pack(tf.squeeze(tf.image.rgb_to_grayscale(numpy.int_(pimg)))),tf.pack(numpy.int_(get_groundtruth_img(i)))).eval()
-            acc_sum.append(acc)
-            print("accuracy : {:3f}".format(acc))
-            print("accuracy mean : {:3f}".format(numpy.asarray(acc_sum).mean()))
+
         #pdb.set_trace()
+        print(y_true.shape,y_pred.shape)
         print ("Precision", precision_score(y_true, y_pred))
         print ("Recall", recall_score(y_true, y_pred))
         print ("f1_score", f1_score(y_true, y_pred))
