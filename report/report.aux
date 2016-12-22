@@ -17,49 +17,68 @@
 \gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
-\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Data example\relax }}{1}{figure.caption.1}}
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{example}{{1}{1}{Data example\relax }{figure.caption.1}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {II}Baselines}{1}{section.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-A}}Baseline classifier selection}{1}{subsection.2.1}}
-\newlabel{baseline_selection}{{\unhbox \voidb@x \hbox {II-A}}{1}{Baseline classifier selection}{subsection.2.1}{}}
-\newlabel{baselines}{{\caption@xref {baselines}{ on input line 84}}{1}{Baseline classifier selection}{table.caption.2}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Baselines\relax }}{1}{table.caption.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {II-B}}Patch size selection}{1}{subsection.2.2}}
-\newlabel{patch_size}{{\caption@xref {patch_size}{ on input line 101}}{1}{Patch size selection}{table.caption.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Patch size comparison\relax }}{1}{table.caption.3}}
 \citation{achanta12}
-\citation{lowe99}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Example of training image with its ground-truth\relax }}{1}{figure.caption.1}}
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:example}{{1}{1}{Example of training image with its ground-truth\relax }{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Data exploration}{1}{section.2}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Baselines}{1}{section.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {III-A}}Comparison of classifiers}{1}{subsection.3.1}}
+\newlabel{baseline_selection}{{\unhbox \voidb@x \hbox {III-A}}{1}{Comparison of classifiers}{subsection.3.1}{}}
+\newlabel{table:baselines}{{\caption@xref {table:baselines}{ on input line 76}}{1}{Comparison of classifiers}{table.caption.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Baselines\relax }}{1}{table.caption.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {III-B}}Influence of patch size}{1}{subsection.3.2}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Patch size comparison\relax }}{1}{table.caption.3}}
+\newlabel{patch_size}{{II}{1}{Patch size comparison\relax }{table.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Structured SVM approach}{1}{section.4}}
+\citation{fulkerson09}
+\citation{lowe04}
 \citation{2016ISPAr41B3..891L}
+\citation{canny1986computational}
+\citation{taxicab}
+\citation{tsochantaridis05}
 \citation{fulkerson09}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-A}}Feature extraction}{2}{subsection.4.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces  Example of a hough transform. Left: Input image with the ground-truth overlay. Right: 20 lines with lowest color variance.\relax }}{2}{figure.caption.4}}
+\newlabel{fig:hough}{{2}{2}{Example of a hough transform. Left: Input image with the ground-truth overlay. Right: 20 lines with lowest color variance.\relax }{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {IV-B}}Refinement of generic models using structured SVM}{2}{subsection.4.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces  Example of a superpixel-segmented image with connecting edges.\relax }}{2}{figure.caption.5}}
+\newlabel{fig:graph}{{3}{2}{Example of a superpixel-segmented image with connecting edges.\relax }{figure.caption.5}{}}
 \citation{fulkerson09}
-\@writefile{toc}{\contentsline {section}{\numberline {III}Data exploration}{2}{section.3}}
-\newlabel{sec:orgheadline7}{{III}{2}{Data exploration}{section.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Mid-level segmentations}{2}{section.4}}
-\newlabel{sec:orgheadline8}{{IV}{2}{Mid-level segmentations}{section.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Feature extraction}{2}{section.5}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-A}}Features}{2}{subsection.5.1}}
-\newlabel{features}{{\unhbox \voidb@x \hbox {V-A}}{2}{Features}{subsection.5.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-B}}Refinement of generic models using Conditional Random Field}{2}{subsection.5.2}}
-\newlabel{refinement}{{\unhbox \voidb@x \hbox {V-B}}{2}{Refinement of generic models using Conditional Random Field}{subsection.5.2}{}}
+\citation{muller14}
+\citation{tsochantaridis05}
 \citation{unet}
 \citation{unet}
 \citation{unet}
+\citation{chollet2015keras}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Classification}{3}{section.5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-A}}Classification based on feature vectors}{3}{subsection.5.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {V-B}}U-net}{3}{subsection.5.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces U-net\nobreakspace  {}\cite  {unet}\relax }}{3}{figure.caption.6}}
+\newlabel{fig:unet_arch}{{4}{3}{U-net~\cite {unet}\relax }{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {V-B}1}Hyperparameter selection}{3}{subsubsection.5.2.1}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {V-B}2}Data augmentation}{3}{subsubsection.5.2.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Example Unet output during training. Note that the image is not part of the training set.\relax }}{3}{figure.caption.7}}
+\newlabel{steps}{{5}{3}{Example Unet output during training. Note that the image is not part of the training set.\relax }{figure.caption.7}{}}
 \bibstyle{ieeetr}
 \bibdata{refs}
-\bibcite{2016ISPAr41B3..891L}{1}
-\bibcite{unet}{2}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Classification}{3}{section.6}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {VI-A}}Classification based on feature vectors}{3}{subsection.6.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\unhbox \voidb@x \hbox {VI-B}}CNNs}{3}{subsection.6.2}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {VI-B}1}Guillaume for you!!!}{3}{subsubsection.6.2.1}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {\unhbox \voidb@x \hbox {VI-B}2}U-net}{3}{subsubsection.6.2.2}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Results}{3}{section.7}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces U-net\nobreakspace  {}\cite  {unet}\relax }}{3}{figure.caption.4}}
-\newlabel{unet_arch}{{2}{3}{U-net~\cite {unet}\relax }{figure.caption.4}{}}
-\newlabel{results}{{\caption@xref {results}{ on input line 181}}{3}{Results}{table.caption.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Concentrated results\relax }}{3}{table.caption.5}}
-\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusions}{3}{section.8}}
-\newlabel{sec:orgheadline9}{{VIII}{3}{Conclusions}{section.8}{}}
-\@writefile{toc}{\contentsline {section}{References}{3}{section*.6}}
+\bibcite{achanta12}{1}
+\bibcite{fulkerson09}{2}
+\bibcite{lowe04}{3}
+\bibcite{2016ISPAr41B3..891L}{4}
+\bibcite{canny1986computational}{5}
+\bibcite{taxicab}{6}
+\bibcite{tsochantaridis05}{7}
+\bibcite{muller14}{8}
+\bibcite{unet}{9}
+\bibcite{chollet2015keras}{10}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Results}{4}{section.6}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Feature classification performance for different regularization parameters.\relax }}{4}{figure.caption.8}}
+\newlabel{fig:reg_ssvm}{{6}{4}{Feature classification performance for different regularization parameters.\relax }{figure.caption.8}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Concentrated results\relax }}{4}{table.caption.9}}
+\newlabel{table:results}{{III}{4}{Concentrated results\relax }{table.caption.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusions}{4}{section.7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Example of predictions on unseen image (apologies for the different coloring).\relax }}{4}{figure.caption.10}}
+\newlabel{example_all}{{7}{4}{Example of predictions on unseen image (apologies for the different coloring).\relax }{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{References}{4}{section*.11}}

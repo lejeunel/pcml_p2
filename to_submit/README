@@ -1,0 +1,18 @@
+- run.py 				: loads pretrained model, applies on testing set and saves predictions in folder "testing_results", and also generates the submission file
+- proj2_baseline.py 	: runs an RF classifier on features, either 2d(mean and variance) or 65d(extracted features), 5-fold cross validation
+- proj2_unet.py			: trains a Unet CNN network and saves the weights
+- classifier.py 		: auxiliary file with functions connected to the classification task
+- keras_imports.py 		: auxiliary file with necessary imports connected to the keras framework
+- helpers_reduced.py 	: auxiliary file with functions that are needed to run some of the scripts
+- helpers.py 			: auxiliary file with functions that are needed to run some of the scripts
+- augment.py			: auxiliary file with extension of keras image generator to also augment the groundtruth 
+						  (https://www.kaggle.com/hexietufts/ultrasound-nerve-segmentation/easy-to-use-keras-imagedatagenerator/code)
+- unet_weights.hdf5 	: HDF5 file with the trained weights for the unet network
+- features.npy			: numpy matrix of superpixel feature vectors for all the images
+- labels.npy			: numpy array with label for each superpixel feature vector
+
+The training and testing data folders, uncompressed, are in the same directory as the above files
+The CNN is written on the keras framework, that runs on top of theano
+
+LINK TO THE DATA FOLDERS AND THE TRAINED WEIGHTS:
+https://www.dropbox.com/sh/smlbwzble5bqob7/AABNF5hPAahKWDrJpPbnMbeba?dl=0

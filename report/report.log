@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.4.25)  18 DEC 2016 12:15
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.4.25)  22 DEC 2016 10:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -359,6 +359,42 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 \Gin@req@height=\dimen117
 \Gin@req@width=\dimen118
 )
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2013/05/02 v3.3-89 Customizing captions (AR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2013/05/02 v1.6-88 caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 57.
+\captionmargin=\dimen119
+\captionmargin@=\dimen120
+\captionwidth=\dimen121
+\caption@tempdima=\dimen122
+\caption@indent=\dimen123
+\caption@parindent=\dimen124
+\caption@hangindent=\dimen125
+Package caption Info: Unknown document class (or package),
+(caption)             standard defaults will be used.
+)
+
+Package caption Warning: Unsupported document class (or package) detected,
+(caption)                usage of the caption package is not recommended.
+See the caption package documentation for explanation.
+
+Package caption Info: \@makecaption = \long macro:#1#2->\ifx \@captype \@IEEEta
+blestring \footnotesize \begin {center}{\normalfont \footnotesize #1}\\{\normal
+font \footnotesize \scshape #2}\end {center}\@IEEEtablecaptionsepspace \else \@
+IEEEfigurecaptionsepspace \setbox \@tempboxa \hbox {\normalfont \footnotesize {
+#1.}~~ #2}\ifdim \wd \@tempboxa >\hsize \setbox \@tempboxa \hbox {\normalfont \
+footnotesize {#1.}~~ }\parbox [t]{\hsize }{\normalfont \footnotesize \noindent 
+\unhbox \@tempboxa #2}\else \ifCLASSOPTIONconference \hbox to\hsize {\normalfon
+t \footnotesize \hfil \box \@tempboxa \hfil }\else \hbox to\hsize {\normalfont 
+\footnotesize \box \@tempboxa \hfil }\fi \fi \fi .
+\c@ContinuedFloat=\count92
+) (/usr/share/texlive/texmf-dist/tex/latex/caption/subcaption.sty
+Package: subcaption 2013/02/03 v1.1-62 Sub-captions (AR)
+\c@subfigure=\count93
+\c@subtable=\count94
+)
 (/usr/share/texlive/texmf-dist/tex/latex/oberdiek/grffile.sty
 Package: grffile 2012/04/05 v1.16 Extended file name support for graphics (HO)
 
@@ -406,22 +442,22 @@ Package: longtable 2014/10/28 v4.11 Multi-page Table package (DPC)
 \LTright=\skip45
 \LTpre=\skip46
 \LTpost=\skip47
-\LTchunksize=\count92
-\LTcapwidth=\dimen119
+\LTchunksize=\count95
+\LTcapwidth=\dimen126
 \LT@head=\box27
 \LT@firsthead=\box28
 \LT@foot=\box29
 \LT@lastfoot=\box30
-\LT@cols=\count93
-\LT@rows=\count94
-\c@LT@tables=\count95
-\c@LT@chunks=\count96
+\LT@cols=\count96
+\LT@rows=\count97
+\c@LT@tables=\count98
+\c@LT@chunks=\count99
 \LT@p@ftn=\toks18
 )
 (/usr/share/texlive/texmf-dist/tex/latex/wrapfig/wrapfig.sty
-\wrapoverhang=\dimen120
-\WF@size=\dimen121
-\c@WF@wrappedlines=\count97
+\wrapoverhang=\dimen127
+\WF@size=\dimen128
+\c@WF@wrappedlines=\count100
 \WF@box=\box31
 \WF@everypar=\toks19
 Package: wrapfig 2003/01/31  v 3.6
@@ -432,7 +468,7 @@ Package: rotating 2009/03/28 v2.16a rotated objects in LaTeX
 (/usr/share/texlive/texmf-dist/tex/latex/base/ifthen.sty
 Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 )
-\c@r@tfl@t=\count98
+\c@r@tfl@t=\count101
 \rotFPtop=\skip48
 \rotFPbot=\skip49
 \rot@float@box=\box32
@@ -443,12 +479,12 @@ Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 \UL@hyphenbox=\box34
 \UL@skip=\skip50
 \UL@hook=\toks21
-\UL@height=\dimen122
-\UL@pe=\count99
-\UL@pixel=\dimen123
+\UL@height=\dimen129
+\UL@pe=\count102
+\UL@pixel=\dimen130
 \ULC@box=\box35
 Package: ulem 2012/05/18
-\ULdepth=\dimen124
+\ULdepth=\dimen131
 )
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
 Package: amsmath 2013/01/14 v2.14 AMS math features
@@ -461,46 +497,46 @@ Package: amstext 2000/06/29 v2.01
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0
 \@emptytoks=\toks22
-\ex@=\dimen125
+\ex@=\dimen132
 ))
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d
-\pmbraise@=\dimen126
+\pmbraise@=\dimen133
 )
 (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsopn.sty
 Package: amsopn 1999/12/14 v2.01 operator names
 )
-\inf@bad=\count100
+\inf@bad=\count103
 LaTeX Info: Redefining \frac on input line 210.
-\uproot@=\count101
-\leftroot@=\count102
+\uproot@=\count104
+\leftroot@=\count105
 LaTeX Info: Redefining \overline on input line 306.
-\classnum@=\count103
-\DOTSCASE@=\count104
+\classnum@=\count106
+\DOTSCASE@=\count107
 LaTeX Info: Redefining \ldots on input line 378.
 LaTeX Info: Redefining \dots on input line 381.
 LaTeX Info: Redefining \cdots on input line 466.
 \Mathstrutbox@=\box36
 \strutbox@=\box37
-\big@size=\dimen127
+\big@size=\dimen134
 LaTeX Font Info:    Redeclaring font encoding OML on input line 566.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
-\macc@depth=\count105
-\c@MaxMatrixCols=\count106
+\macc@depth=\count108
+\c@MaxMatrixCols=\count109
 \dotsspace@=\muskip10
-\c@parentequation=\count107
-\dspbrk@lvl=\count108
+\c@parentequation=\count110
+\dspbrk@lvl=\count111
 \tag@help=\toks23
-\row@=\count109
-\column@=\count110
-\maxfields@=\count111
+\row@=\count112
+\column@=\count113
+\maxfields@=\count114
 \andhelp@=\toks24
-\eqnshift@=\dimen128
-\alignsep@=\dimen129
-\tagshift@=\dimen130
-\tagwidth@=\dimen131
-\totwidth@=\dimen132
-\lineht@=\dimen133
+\eqnshift@=\dimen135
+\alignsep@=\dimen136
+\tagshift@=\dimen137
+\tagwidth@=\dimen138
+\totwidth@=\dimen139
+\lineht@=\dimen140
 \@envbody=\toks25
 \multlinegap=\skip52
 \multlinetaggap=\skip53
@@ -508,6 +544,16 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
 LaTeX Info: Redefining \[ on input line 2665.
 LaTeX Info: Redefining \] on input line 2666.
 )
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
 (/usr/share/texlive/texmf-dist/tex/latex/base/textcomp.sty
 Package: textcomp 2005/09/27 v1.99g Standard LaTeX package
 Package textcomp Info: Sub-encoding information:
@@ -664,16 +710,6 @@ Package textcomp Info: Setting pplj sub-encoding to TS1/3 on input line 407.
 Package textcomp Info: Setting ptmx sub-encoding to TS1/4 on input line 408.
 Package textcomp Info: Setting ptmj sub-encoding to TS1/4 on input line 409.
 )
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
-Package: amssymb 2013/01/14 v3.01 AMS font symbols
-
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
-Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
-\symAMSa=\mathgroup4
-\symAMSb=\mathgroup5
-LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
-(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-))
 (/usr/share/texlive/texmf-dist/tex/latex/capt-of/capt-of.sty
 Package: capt-of 2009/12/29 v0.2 standard captions outside of floats
 )
@@ -717,16 +753,16 @@ Package: hycolor 2011/01/30 v1.7 Color options for hyperref/bookmark (HO)
 (/usr/share/texlive/texmf-dist/tex/latex/oberdiek/auxhook.sty
 Package: auxhook 2011/03/04 v1.3 Hooks for auxiliary files (HO)
 )
-\@linkdim=\dimen134
-\Hy@linkcounter=\count112
-\Hy@pagecounter=\count113
+\@linkdim=\dimen141
+\Hy@linkcounter=\count115
+\Hy@pagecounter=\count116
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2012/11/06 v6.83m Hyperref: PDFDocEncoding definition (HO)
 Now handling font encoding PD1 ...
 ... no UTF-8 mapping file for font encoding PD1
 )
-\Hy@SavedSpaceFactor=\count114
+\Hy@SavedSpaceFactor=\count117
 
 (/usr/share/texlive/texmf-dist/tex/latex/latexconfig/hyperref.cfg
 File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
@@ -738,17 +774,17 @@ Package hyperref Info: Plain pages OFF on input line 4458.
 Package hyperref Info: Backreferencing OFF on input line 4463.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4688.
-\c@Hy@tempcnt=\count115
+\c@Hy@tempcnt=\count118
 
 (/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip11
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 5041.
-\XeTeXLinkMargin=\dimen135
-\Fld@menulength=\count116
-\Field@Width=\dimen136
-\Fld@charsize=\dimen137
+\XeTeXLinkMargin=\dimen142
+\Fld@menulength=\count119
+\Field@Width=\dimen143
+\Fld@charsize=\dimen144
 Package hyperref Info: Hyper figures OFF on input line 6295.
 Package hyperref Info: Link nesting OFF on input line 6300.
 Package hyperref Info: Hyper index ON on input line 6303.
@@ -758,17 +794,17 @@ Package hyperref Info: Link coloring with OCG OFF on input line 6320.
 Package hyperref Info: PDF/A mode OFF on input line 6325.
 LaTeX Info: Redefining \ref on input line 6365.
 LaTeX Info: Redefining \pageref on input line 6369.
-\Hy@abspage=\count117
-\c@Item=\count118
-\c@Hfootnote=\count119
+\Hy@abspage=\count120
+\c@Item=\count121
+\c@Hfootnote=\count122
 )
 
 Package hyperref Message: Driver (autodetected): hpdftex.
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/hpdftex.def
 File: hpdftex.def 2012/11/06 v6.83m Hyperref driver for pdfTeX
-\Fld@listcount=\count120
-\c@bookmark@seq@number=\count121
+\Fld@listcount=\count123
+\c@bookmark@seq@number=\count124
 
 (/usr/share/texlive/texmf-dist/tex/latex/oberdiek/rerunfilecheck.sty
 Package: rerunfilecheck 2011/04/15 v1.7 Rerun checks for auxiliary files (HO)
@@ -796,62 +832,16 @@ Package: xkeyval 2014/12/03 v2.7a package option processing (HA)
 \XKV@toks=\toks27
 \XKV@tempa@toks=\toks28
 )
-\XKV@depth=\count122
+\XKV@depth=\count125
 File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
 ))
 (/usr/share/texlive/texmf-dist/tex/latex/subfig/subfig.sty
 Package: subfig 2005/06/28 ver: 1.3 subfig package
-
-(/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
-Package: caption 2013/05/02 v3.3-89 Customizing captions (AR)
-
-(/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
-Package: caption3 2013/05/02 v1.6-88 caption3 kernel (AR)
-Package caption3 Info: TeX engine: e-TeX on input line 57.
-\captionmargin=\dimen138
-\captionmargin@=\dimen139
-\captionwidth=\dimen140
-\caption@tempdima=\dimen141
-\caption@indent=\dimen142
-\caption@parindent=\dimen143
-\caption@hangindent=\dimen144
-Package caption Info: Unknown document class (or package),
-(caption)             standard defaults will be used.
-)
-
-Package caption Warning: Unsupported document class (or package) detected,
-(caption)                usage of the caption package is not recommended.
-See the caption package documentation for explanation.
-
-Package caption Info: \@makecaption = \long macro:#1#2->\ifx \@captype \@IEEEta
-blestring \footnotesize \begin {center}{\normalfont \footnotesize #1}\\{\normal
-font \footnotesize \scshape #2}\end {center}\@IEEEtablecaptionsepspace \else \@
-IEEEfigurecaptionsepspace \setbox \@tempboxa \hbox {\normalfont \footnotesize {
-#1.}~~ #2}\ifdim \wd \@tempboxa >\hsize \setbox \@tempboxa \hbox {\normalfont \
-footnotesize {#1.}~~ }\parbox [t]{\hsize }{\normalfont \footnotesize \noindent 
-\unhbox \@tempboxa #2}\else \ifCLASSOPTIONconference \hbox to\hsize {\normalfon
-t \footnotesize \hfil \box \@tempboxa \hfil }\else \hbox to\hsize {\normalfont 
-\footnotesize \box \@tempboxa \hfil }\fi \fi \fi .
-\c@ContinuedFloat=\count123
-Package caption Info: hyperref package is loaded.
-Package caption Info: longtable package is loaded.
-(/usr/share/texlive/texmf-dist/tex/latex/caption/ltcaption.sty
-Package: ltcaption 2013/02/03 v1.3-62 longtable captions (AR)
-)
-Package caption Info: rotating package is loaded.
-Package caption Info: wrapfig package is loaded.
-)
-\c@KVtest=\count124
+\c@KVtest=\count126
 \sf@farskip=\skip55
 \sf@captopadj=\dimen145
 \sf@capskip=\skip56
 \sf@nearskip=\skip57
-\c@subfigure=\count125
-\c@subfigure@save=\count126
-\c@lofdepth=\count127
-\c@subtable=\count128
-\c@subtable@save=\count129
-\c@lotdepth=\count130
 \sf@top=\skip58
 \sf@bottom=\skip59
 )
@@ -881,13 +871,13 @@ Package xcolor Info: Model `wave' substituted by `hsb' on input line 1360.
 )
 \SVG@out@width=\skip60
 \SVG@out@height=\skip61
-\c@svgfigure=\count131
+\c@svgfigure=\count127
 )
 (/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2010/09/12 v5.6 Page Geometry
-\Gm@cnth=\count132
-\Gm@cntv=\count133
-\c@Gm@tempcnt=\count134
+\Gm@cnth=\count128
+\Gm@cntv=\count129
+\c@Gm@tempcnt=\count130
 \Gm@bindingoffset=\dimen146
 \Gm@wd@mp=\dimen147
 \Gm@odd@mp=\dimen148
@@ -904,14 +894,14 @@ nment
 
 (/usr/share/texlive/texmf-dist/tex/latex/float/float.sty
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count135
+\c@float@type=\count131
 \float@exts=\toks30
 \float@box=\box38
 \@float@everytoks=\toks31
 \@floatcapt=\box39
 )
 \@float@every@algorithm=\toks32
-\c@algorithm=\count136
+\c@algorithm=\count132
 )
 (/usr/share/texlive/texmf-dist/tex/latex/algorithmicx/algpseudocode.sty
 Package: algpseudocode 
@@ -920,106 +910,94 @@ Package: algpseudocode
 Package: algorithmicx 2005/04/27 v1.2 Algorithmicx
 
 Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
-\c@ALG@line=\count137
-\c@ALG@rem=\count138
-\c@ALG@nested=\count139
+\c@ALG@line=\count133
+\c@ALG@rem=\count134
+\c@ALG@nested=\count135
 \ALG@tlm=\skip62
 \ALG@thistlm=\skip63
-\c@ALG@Lnr=\count140
-\c@ALG@blocknr=\count141
-\c@ALG@storecount=\count142
-\c@ALG@tmpcounter=\count143
+\c@ALG@Lnr=\count136
+\c@ALG@blocknr=\count137
+\c@ALG@storecount=\count138
+\c@ALG@tmpcounter=\count139
 \ALG@tmplength=\skip64
 )
 Document Style - pseudocode environments for use with the `algorithmicx' style
-)
-
-! LaTeX Error: Two \documentclass or \documentstyle commands.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.26 \documentclass[10pt,conference,compsocconf]{
-                                                 IEEEtran}
-The document may only declare one class.
-
-(./report.aux)
+) (./report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 37.
-LaTeX Font Info:    Try loading font information for TS1+cmr on input line 37.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 41.
+LaTeX Font Info:    Try loading font information for TS1+cmr on input line 41.
  (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 37.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 37.
-LaTeX Font Info:    ... okay on input line 37.
+LaTeX Font Info:    ... okay on input line 41.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 41.
+LaTeX Font Info:    ... okay on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <5> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <5> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <7> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <7> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <8> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <8> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <9> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <9> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <10> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <11> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <11> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <12> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <17> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <17> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <20> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <20> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <24> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 41.
 LaTeX Font Info:    Font shape `T1/ptm/bx/it' in size <24> not available
-(Font)              Font shape `T1/ptm/b/it' tried instead on input line 37.
+(Font)              Font shape `T1/ptm/b/it' tried instead on input line 41.
 
 (/usr/share/texlive/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count144
+\scratchcounter=\count140
 \scratchdimen=\dimen154
 \scratchbox=\box40
-\nofMPsegments=\count145
-\nofMParguments=\count146
+\nofMPsegments=\count141
+\nofMParguments=\count142
 \everyMPshowfont=\toks33
-\MPscratchCnt=\count147
+\MPscratchCnt=\count143
 \MPscratchDim=\dimen155
-\MPnumerator=\count148
-\makeMPintoPDFobject=\count149
+\MPnumerator=\count144
+\makeMPintoPDFobject=\count145
 \everyMPtoPDFconversion=\toks34
 ) (/usr/share/texlive/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
 Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
@@ -1036,8 +1014,20 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: subfig package v1.3 is loaded.
+Package caption Info: float package is loaded.
+Package caption Info: hyperref package is loaded.
+Package caption Info: longtable package is loaded.
+
+(/usr/share/texlive/texmf-dist/tex/latex/caption/ltcaption.sty
+Package: ltcaption 2013/02/03 v1.3-62 longtable captions (AR)
+)
+Package caption Info: rotating package is loaded.
+Package caption Info: wrapfig package is loaded.
+Package caption Info: End \AtBeginDocument code.
 \AtBeginShipoutBox=\box41
-Package hyperref Info: Link coloring OFF on input line 37.
+Package hyperref Info: Link coloring OFF on input line 41.
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
@@ -1045,20 +1035,27 @@ Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
 (/usr/share/texlive/texmf-dist/tex/generic/oberdiek/gettitlestring.sty
 Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
-\c@section@level=\count150
+\c@section@level=\count146
 )
-LaTeX Info: Redefining \ref on input line 37.
-LaTeX Info: Redefining \pageref on input line 37.
-LaTeX Info: Redefining \nameref on input line 37.
+LaTeX Info: Redefining \ref on input line 41.
+LaTeX Info: Redefining \pageref on input line 41.
+LaTeX Info: Redefining \nameref on input line 41.
 
 (./report.out) (./report.out)
 \@outlinefile=\write3
 \openout3 = `report.out'.
 
-Package caption Info: Begin \AtBeginDocument code.
-Package caption Info: subfig package v1.3 is loaded.
-Package caption Info: float package is loaded.
-Package caption Info: End \AtBeginDocument code.
+
+! Undefined control sequence.
+<argument> \sf@counterlist 
+                           
+l.41 \begin{document}
+                     
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -1095,99 +1092,211 @@ Package caption Info: End \AtBeginDocument code.
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <14> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 40.
-<pics/example.png, id=73, 1321.0956pt x 478.4274pt>
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 44.
+<pics/example.png, id=69, 1321.0956pt x 478.4274pt>
 File: pics/example.png Graphic file (type png)
  <use pics/example.png>
-Package pdftex.def Info: pics/example.png used on input line 45.
-(pdftex.def)             Requested size: 234.8775pt x 85.05467pt.
+Package pdftex.def Info: pics/example.png used on input line 51.
+(pdftex.def)             Requested size: 211.38832pt x 76.54994pt.
+LaTeX Font Info:    Try loading font information for U+msa on input line 64.
 
-Overfull \hbox (9.03374pt too wide) in paragraph at lines 45--46
- [][] 
- []
-
-LaTeX Font Info:    Try loading font information for U+msa on input line 67.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 67.
+LaTeX Font Info:    Try loading font information for U+msb on input line 64.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 
-LaTeX Warning: Reference `baseline' on page 1 undefined on input line 73.
+Package caption Warning: \label without proper \caption on input line 76.
+See the caption package documentation for explanation.
+
+
+LaTeX Warning: Reference `table:baselines' on page 1 undefined on input line 65
+.
 
 LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <6> not available
-(Font)              Font shape `T1/ptm/b/n' tried instead on input line 77.
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 69.
 
-Overfull \hbox (24.64247pt too wide) in paragraph at lines 76--85
+Overfull \hbox (21.65643pt too wide) in paragraph at lines 68--77
  [][] 
  []
 
 
-Package caption Warning: \label without proper \caption on input line 101.
-See the caption package documentation for explanation.
-
-
-LaTeX Warning: Reference `patch_size' on page 1 undefined on input line 88.
+Overfull \hbox (29.9342pt too wide) in paragraph at lines 86--92
+ [][] 
+ []
 
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
  <./pics/example.png>]
+Package epstopdf Info: Source file: <pics/ex_hough.eps>
+(epstopdf)                    date: 2016-12-21 18:59:21
+(epstopdf)                    size: 423594 bytes
+(epstopdf)             Output file: <pics/ex_hough-eps-converted-to.pdf>
+(epstopdf)                    date: 2016-12-21 19:03:37
+(epstopdf)                    size: 84432 bytes
+(epstopdf)             Command: <repstopdf --outfile=pics/ex_hough-eps-converte
+d-to.pdf pics/ex_hough.eps>
+(epstopdf)             \includegraphics on input line 105.
+Package epstopdf Info: Output file is already uptodate.
 
-LaTeX Warning: Citation `achanta12' on page 2 undefined on input line 114.
+<pics/ex_hough-eps-converted-to.pdf, id=99, 817.0525pt x 450.68375pt>
+File: pics/ex_hough-eps-converted-to.pdf Graphic file (type pdf)
 
+<use pics/ex_hough-eps-converted-to.pdf>
+Package pdftex.def Info: pics/ex_hough-eps-converted-to.pdf used on input line 
+105.
+(pdftex.def)             Requested size: 164.41711pt x 90.69217pt.
 
-LaTeX Warning: Citation `lowe99' on page 2 undefined on input line 121.
-
-
-Underfull \hbox (badness 2189) in paragraph at lines 124--125
+Underfull \hbox (badness 2189) in paragraph at lines 116--117
 []\T1/ptm/m/n/10 A code-book is gen-er-ated on the afore-
  []
 
+<pics/ex_graph.png, id=108, 388.8126pt x 376.5267pt>
+File: pics/ex_graph.png Graphic file (type png)
+ <use pics/ex_graph.png>
+Package pdftex.def Info: pics/ex_graph.png used on input line 129.
+(pdftex.def)             Requested size: 108.04164pt x 104.62814pt.
 
-LaTeX Warning: Citation `fulkerson09' on page 2 undefined on input line 133.
-
-
-LaTeX Warning: Citation `fulkerson09' on page 2 undefined on input line 144.
-
-[2] <pics/unet.png, id=122, 1560.83125pt x 1039.885pt>
+[2 <./pics/ex_hough-eps-converted-to.pdf> <./pics/ex_graph.png>]
+<pics/unet.png, id=138, 1560.83125pt x 1039.885pt>
 File: pics/unet.png Graphic file (type png)
  <use pics/unet.png>
-Package pdftex.def Info: pics/unet.png used on input line 164.
-(pdftex.def)             Requested size: 234.8775pt x 156.48376pt.
+Package pdftex.def Info: pics/unet.png used on input line 173.
+(pdftex.def)             Requested size: 211.38832pt x 140.8227pt.
 
-Overfull \hbox (9.03374pt too wide) in paragraph at lines 164--165
- [][] 
+<pics/original.png, id=143, 401.5pt x 401.5pt>
+File: pics/original.png Graphic file (type png)
+ <use pics/original.png>
+Package pdftex.def Info: pics/original.png used on input line 187.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+
+<pics/truth.png, id=144, 401.5pt x 401.5pt>
+File: pics/truth.png Graphic file (type png)
+ <use pics/truth.png>
+Package pdftex.def Info: pics/truth.png used on input line 193.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+
+<pics/ep1.png, id=145, 401.5pt x 401.5pt>
+File: pics/ep1.png Graphic file (type png)
+ <use pics/ep1.png>
+Package pdftex.def Info: pics/ep1.png used on input line 199.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+
+<pics/ep5.png, id=146, 401.5pt x 401.5pt>
+File: pics/ep5.png Graphic file (type png)
+ <use pics/ep5.png>
+Package pdftex.def Info: pics/ep5.png used on input line 204.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+
+<pics/ep29.png, id=147, 401.5pt x 401.5pt>
+File: pics/ep29.png Graphic file (type png)
+ <use pics/ep29.png>
+Package pdftex.def Info: pics/ep29.png used on input line 210.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+
+<pics/ep100.png, id=148, 401.5pt x 401.5pt>
+File: pics/ep100.png Graphic file (type png)
+ <use pics/ep100.png>
+Package pdftex.def Info: pics/ep100.png used on input line 216.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+
+<pics/cross_val_ssvm.png, id=150, 578.16pt x 433.62pt>
+File: pics/cross_val_ssvm.png Graphic file (type png)
+
+<use pics/cross_val_ssvm.png>
+Package pdftex.def Info: pics/cross_val_ssvm.png used on input line 225.
+(pdftex.def)             Requested size: 187.89914pt x 140.92482pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 235--235
+[]\T1/ptm/m/n/8 Random for-est, square
  []
 
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Package caption Warning: \label without proper \caption on input line 181.
-See the caption package documentation for explanation.
-
-
-LaTeX Warning: Reference `results' on page 3 undefined on input line 169.
-
-
-Overfull \hbox (24.64247pt too wide) in paragraph at lines 171--182
-[][]
+Underfull \hbox (badness 10000) in paragraph at lines 235--235
+\T1/ptm/m/n/8 patches, ba-sic fea-tures
  []
 
-(./report.bbl)
-! Undefined control sequence.
-l.191 	\printbibliography
-                         
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
 
+Underfull \hbox (badness 1924) in paragraph at lines 236--236
+[]\T1/ptm/m/n/8 Logistic re-gres-sion ($\OML/cmm/m/it/8 ^^U \OT1/cmr/m/n/8 =
+ []
+
+
+Underfull \hbox (badness 4132) in paragraph at lines 237--237
+[]\T1/ptm/m/n/8 Random for-est (50 trees,
+ []
+
+
+Underfull \hbox (badness 2150) in paragraph at lines 237--237
+\T1/ptm/m/n/8 max. depth 10), elab-o-rate
+ []
+
+
+Underfull \hbox (badness 8075) in paragraph at lines 239--239
+\T1/ptm/m/n/8 re-fine-ment, elab-o-rate fea-
+ []
+
+
+Underfull \vbox (badness 1087) has occurred while \output is active []
+
+ [3 <./pics/unet.png> <./pics/original.png (PNG copy)> <./pics/truth.png (PNG c
+opy)> <./pics/ep1.png (PNG copy)> <./pics/ep5.png (PNG copy)> <./pics/ep29.png 
+(PNG copy)> <./pics/ep100.png (PNG copy)>] <pics/image2.png, id=168, 401.5pt x 
+401.5pt>
+File: pics/image2.png Graphic file (type png)
+
+<use pics/image2.png>
+Package pdftex.def Info: pics/image2.png used on input line 250.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+ <pics/gt2.png, id=169, 401.5pt x 401.5pt>
+File: pics/gt2.png Graphic file (type png)
+
+<use pics/gt2.png>
+Package pdftex.def Info: pics/gt2.png used on input line 256.
+(pdftex.def)             Requested size: 56.3683pt x 56.36276pt.
+ <pics/baseline2.png, id=170, 347.6187pt x 349.0641pt>
+File: pics/baseline2.png Graphic file (type png)
+
+<use pics/baseline2.png>
+Package pdftex.def Info: pics/baseline2.png used on input line 262.
+(pdftex.def)             Requested size: 56.3683pt x 56.6024pt.
+ <pics/RF2.png, id=171, 159.7167pt x 158.994pt>
+File: pics/RF2.png Graphic file (type png)
+
+<use pics/RF2.png>
+Package pdftex.def Info: pics/RF2.png used on input line 267.
+(pdftex.def)             Requested size: 56.3683pt x 56.1121pt.
+ <pics/RFrefined2.png, id=172, 160.4394pt x 159.7167pt>
+File: pics/RFrefined2.png Graphic file (type png)
+
+<use pics/RFrefined2.png>
+Package pdftex.def Info: pics/RFrefined2.png used on input line 273.
+(pdftex.def)             Requested size: 56.3683pt x 56.11371pt.
+ <pics/unet2.png, id=173, 349.7868pt x 350.5095pt>
+File: pics/unet2.png Graphic file (type png)
+
+<use pics/unet2.png>
+Package pdftex.def Info: pics/unet2.png used on input line 279.
+(pdftex.def)             Requested size: 56.3683pt x 56.48378pt.
+
+Underfull \hbox (badness 7981) in paragraph at lines 280--280
+[]\T1/ptm/m/n/8 (f) |Unet CNN
+ []
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+(./report.bbl
+Underfull \hbox (badness 2401) in paragraph at lines 47--48
+[]\T1/ptm/m/n/9 F. Chol-let, ``Keras.'' []$https : / / github . com / fchollet 
+/ keras$[],
+ []
+
+)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -1199,48 +1308,51 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 192.
-[3 <./pics/unet.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 192.
- (./report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 192.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 192.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 289.
+[4 <./pics/cross_val_ssvm.png> <./pics/image2.png> <./pics/gt2.png> <./pics/bas
+eline2.png> <./pics/RF2.png> <./pics/RFrefined2.png> <./pics/unet2.png>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 289.
+
+(./report.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 289.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 289.
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 174759234ADC5B69590A4620EE97F0B0;1040.
+(rerunfilecheck)             Checksum: CF57BBDAEEFD4CAF33355651845546E2;1003.
 
 
 LaTeX Warning: There were undefined references.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 192.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 289.
  ) 
 Here is how much of TeX's memory you used:
- 11137 strings out of 493085
- 164519 string characters out of 6136917
- 267935 words of memory out of 5000000
- 14362 multiletter control sequences out of 15000+600000
- 122696 words of font info for 145 fonts, out of 8000000 for 9000
+ 11225 strings out of 493085
+ 166373 string characters out of 6136917
+ 271469 words of memory out of 5000000
+ 14430 multiletter control sequences out of 15000+600000
+ 125162 words of font info for 154 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 68i,16n,98p,867b,362s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,16n,75p,909b,530s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></usr/share/texlive/texmf-dist/
 fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/
-type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-r6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><
-/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/sha
-re/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/tex
-live/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dis
-t/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/u
-rw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8
-a.pfb>
-Output written on report.pdf (3 pages, 1683759 bytes).
+type1/public/amsfonts/cmextra/cmex7.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmmi5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr1
+0.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/shar
+e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/ur
+w/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a
+.pfb>
+Output written on report.pdf (4 pages, 4215571 bytes).
 PDF statistics:
- 198 PDF objects out of 1000 (max. 8388607)
- 171 compressed objects within 2 object streams
- 37 named destinations out of 1000 (max. 500000)
- 147 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 259 PDF objects out of 1000 (max. 8388607)
+ 207 compressed objects within 3 object streams
+ 49 named destinations out of 1000 (max. 500000)
+ 214 words of extra memory for PDF output out of 10000 (max. 10000000)
 

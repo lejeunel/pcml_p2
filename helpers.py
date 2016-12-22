@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import os,sys
 from PIL import Image
 import sys
-sys.path.append('/usr/lib/python3.5/site-packages')
+sys.path.append('./local/lib/python3.4/dist-packages')
+sys.path.append('./local/lib/python2.7/dist-packages')
 import cv2
 from skimage import (color,feature,filters,draw,morphology,segmentation)
 from sklearn.metrics import pairwise_distances_argmin
@@ -19,49 +20,38 @@ from skimage.future import graph
 from pystruct.utils import make_grid_edges, edge_list_to_features
 
 def make_edge_features(img,labels,edges):
-    """
-    Computes probabilities associated to edges of CRF graphs.
-    They are calculated as L(i,j)/(1+ || si - sj||) where:
-    L(i,j) is the length (in pixels) of the boundary between superpixel i and j,
-    si and sj are respectively the mean colors of superpixels i and j
-    """
 
     img = color.rgb2luv(img)
     edge_features = list()
-    selem = morphology.square(2)
     for i in range(len(edges)):
         mask1 = labels == edges[i][0]
         mask2 = labels == edges[i][1]
         mask1_idx = np.where(mask1)
         mask2_idx = np.where(mask2)
-        mask1_dilate = morphology.binary_dilation(mask1,selem=selem)
-        mask2_dilate = morphology.binary_dilation(mask2,selem=selem)
-        inter_bounds = mask1_dilate*mask2_dilate
+        center1 = np.asarray(ndimage.measurements.center_of_mass(mask1))
+        center2 = np.asarray(ndimage.measurements.center_of_mass(mask2))
         this_pix1 = img[mask1_idx[0],mask1_idx[1],:]
         this_pix2 = img[mask2_idx[0],mask2_idx[1],:]
         denom = 1+np.linalg.norm(np.mean(this_pix1,axis=0)-np.mean(this_pix2,axis=0))
-        numer = np.sum(inter_bounds)
+        r = center1-center2
+        theta = np.arctan2(r[0],r[1])
+        numer = np.max((np.abs(np.cos(theta)),np.abs(np.sin(theta))))
         edge_features.append(numer/(denom))
+        #edge_features.append(1/(1+np.abs((this_mask1[0].shape[0] - this_mask2[0].shape[0]))))
 
     return edge_features
 
-def make_graph_crf(labels):
-    """
-    Makes the vertices and edges.
-    The index of the vertices are given by the values of labels (2D array)
-    Edges connect neighboring labels
-    """
-
+def make_graph_crf(grid):
     # get unique labels
-    vertices = np.unique(labels)
+    vertices = np.unique(grid)
 
     # map unique labels to [1,...,num_labels]
     reverse_dict = dict(zip(vertices,np.arange(len(vertices))))
-    labels = np.array([reverse_dict[x] for x in labels.flat]).reshape(labels.shape)
+    grid = np.array([reverse_dict[x] for x in grid.flat]).reshape(grid.shape)
 
     # create edges
-    down = np.c_[labels[:-1, :].ravel(), labels[1:, :].ravel()]
-    right = np.c_[labels[:, :-1].ravel(), labels[:, 1:].ravel()]
+    down = np.c_[grid[:-1, :].ravel(), grid[1:, :].ravel()]
+    right = np.c_[grid[:, :-1].ravel(), grid[:, 1:].ravel()]
     all_edges = np.vstack([right, down])
     all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1], :]
     all_edges = np.sort(all_edges,axis=1)
@@ -76,9 +66,6 @@ def make_graph_crf(labels):
     return vertices, edges
 
 def get_features_edges(imgs,grid_step,canny_sigma):
-    """
-    Computes canny edge features (not used9
-    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -88,7 +75,7 @@ def get_features_edges(imgs,grid_step,canny_sigma):
 
     return patches.reshape(-1,1)
 
-def get_features_rgb(imgs,grid_step=16,labels=None):
+def get_features_rgb(imgs,grid_step=16,s=None):
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -140,9 +127,6 @@ def get_features_hist(imgs,n_bins,grid_step):
 
 
 def distance_transform_edge(img,edge_sigma=1):
-    """
-    Computes the taxicab distance transform on binary array.
-    """
 
     edge_map = feature.canny(img,sigma=edge_sigma)
     dt = ndimage.distance_transform_cdt(~edge_map,metric='taxicab')
@@ -150,9 +134,6 @@ def distance_transform_edge(img,edge_sigma=1):
     return dt
 
 def distance_transform(mat,edge_sigma=1):
-    """
-    Computes the taxicab distance transform on binary array.
-    """
 
     dt = ndimage.distance_transform_cdt(mat,metric='taxicab')
 
@@ -173,9 +154,6 @@ def my_thr(img,rel_thr,sigma):
     return img_thr
 
 def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3,labels=None):
-    """
-    This is a wrapper function on make_hough that processes a list of images.
-    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -192,9 +170,6 @@ def get_features_hough(imgs,rel_thr,max_n_lines, grid_step=1,sig_canny=1,radius=
         return patches.reshape(-1,1)
 
 def make_hough(img,rel_thr,max_n_lines,sig_canny=1,radius=1,threshold=10, line_length=45,line_gap=3):
-    """
-    Extracts Hough lines from image. Lines are sorted according to the RGB variance of pixels. max_n_lines are returned.
-    """
 
     #Hough-lines extractor
     elem = morphology.disk(1)
@@ -232,10 +207,6 @@ def recreate_image(codebook, labels, w, h):
     return image
 
 def kmeans_img(img,n_clusters):
-    """
-    Performs kmeans clustering (vector quantization) on input image using K=n_clusters.
-    """
-
     # Load Image and transform to a 2D numpy array.
     w, h, d = original_shape = tuple(img.shape)
     assert d == 3
@@ -257,9 +228,6 @@ def kmeans_img(img,n_clusters):
     return recreate_image(kmeans.cluster_centers_, labels, w, h)
 
 def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step=16,return_kps=False,labels=None):
-    """
-    This is a wrapper function on get_sift_densely that processes a list of images.
-    """
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -275,10 +243,6 @@ def get_features_sift(imgs,canny_sigma,sift_sigmas,grid_step=16,return_kps=False
         return X_sift
 
 def get_sift_densely(img,step=1,sigmas=None,mode='neighborhood',subsampl_step = 2,macro_length=2,return_kps=False):
-    """
-    Extract SIFT descriptors on a dense grid. The neighborhood option allows to concatenate several SIFT descriptor sampled around a keypoint. That option was tested but not retained (slow and non-effective).
-
-    """
 
     def do_it(img,step):
         sift = cv2.xfeatures2d.SIFT_create(sigma=1)
@@ -322,9 +286,6 @@ def load_image(infilename):
     return data
 
 def rgb_remove_green(img):
-    """
-    Removes the green channel.
-    """
     img[:,:,1] = np.zeros((img.shape[0],img.shape[1]))
     return img
 
@@ -351,9 +312,6 @@ def concatenate_images(img, gt_img):
     return cimg
 
 def img_crop_sp(im, labels):
-    """
-    Returns list of pixel values (array) contained in labels
-    """
 
     h = im.shape[0]
     w = im.shape[1]
@@ -466,9 +424,6 @@ def prepare_data(X):
 
 def make_features_sp(img,pca,canny_sigma,slic_comp,slic_segments,hough_rel_thr,hough_max_lines,hough_canny, hough_radius, hough_threshold, hough_line_length, hough_line_gap,codebook):
 
-    """
-    Extracts features on superpixel-segmented image.
-    """
     sift_bow = list()
     labels = segmentation.slic(img, compactness=slic_comp, n_segments=slic_segments)
     X_hough = np.asarray(get_features_hough([img],hough_rel_thr,hough_max_lines, 1,hough_canny,hough_radius,hough_threshold , hough_line_length,hough_line_gap,labels = [labels]))
@@ -527,3 +482,32 @@ def get_gabor_kernels(theta_range, sigma_range, freq_range):
 				kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
 				kernels.append(kernel)
 	return kernels
+
+"""--------------------sybmission stuff------------------------------"""
+# assign a label to a patch
+def patch_to_label(patch,foreground_threshold=0.25):
+    df = np.mean(patch)
+    if df > foreground_threshold:
+        return 1
+    else:
+        return 0
+
+def mask_to_submission_strings(image_filename):
+    """Reads a single image and outputs the strings that should go into the submission file"""
+    img_number = int(re.search(r"\d+", os.path.basename(image_filename)).group(0))
+    im = mpimg.imread(image_filename)
+    patch_size = 16
+    #pdb.set_trace()
+    for j in range(0, im.shape[1], patch_size):
+        for i in range(0, im.shape[0], patch_size):
+            patch = im[i:i + patch_size, j:j + patch_size]
+            label = patch_to_label(patch)
+            yield("{:03d}_{}_{},{}".format(img_number, j, i, label))
+
+
+def masks_to_submission(submission_filename, *image_filenames):
+    """Converts images into a submission file"""
+    with open(submission_filename, 'w') as f:
+        f.write('id,prediction\n')
+        for fn in image_filenames[0:]:
+            f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(fn))
