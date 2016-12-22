@@ -1,0 +1,16 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Data exploration}{}% 2
+\BOOKMARK [1][-]{section.3}{Baselines}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Comparison of classifiers}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Influence of patch size}{section.3}% 5
+\BOOKMARK [1][-]{section.4}{Structured SVM approach}{}% 6
+\BOOKMARK [2][-]{subsection.4.1}{Feature extraction}{section.4}% 7
+\BOOKMARK [2][-]{subsection.4.2}{Refinement of generic models using structured SVM}{section.4}% 8
+\BOOKMARK [1][-]{section.5}{Classification}{}% 9
+\BOOKMARK [2][-]{subsection.5.1}{Classification based on feature vectors}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.2}{U-net}{section.5}% 11
+\BOOKMARK [3][-]{subsubsection.5.2.1}{Hyperparameter selection}{subsection.5.2}% 12
+\BOOKMARK [3][-]{subsubsection.5.2.2}{Data augmentation}{subsection.5.2}% 13
+\BOOKMARK [1][-]{section.6}{Results}{}% 14
+\BOOKMARK [1][-]{section.7}{Conclusions}{}% 15
+\BOOKMARK [1][-]{section*.11}{References}{}% 16

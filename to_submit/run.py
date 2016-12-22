@@ -9,20 +9,14 @@ import matplotlib.image as mpimg
 import numpy as np
 import matplotlib.pyplot as plt
 import os,sys
-#import Image
-#from PIL.Image import core as image
-import pdb
 from sklearn import linear_model, svm, metrics
 from sklearn.model_selection import cross_val_score, GridSearchCV, StratifiedShuffleSplit
-#from skimage.filters import gabor_kernel
-#from skimage.transform import rescale, rotate
 from scipy import ndimage
 import scipy.misc
 import glob
 from natsort import natsorted
 
 import helpers_reduced as hp
-#import helpers as hp
 import classifier as clf
 from classifier import dice_coef, dice_coef_loss, precision, recall, fbeta_score, fmeasure
 exec(open('keras_imports.py').read())

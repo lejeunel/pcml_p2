@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import os,sys
 #import Image
 #from PIL.Image import core as image
-import pdb
 from sklearn import linear_model, svm, metrics
 from sklearn.model_selection import cross_val_score, GridSearchCV, StratifiedShuffleSplit
 #from skimage.filters import gabor_kernel

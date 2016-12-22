@@ -75,7 +75,7 @@ def get_features_edges(imgs,grid_step,canny_sigma):
 
     return patches.reshape(-1,1)
 
-def get_features_rgb(imgs,grid_step=16,s=None):
+def get_features_rgb(imgs,grid_step=16,labels=None):
 
     w = imgs[0].shape[1]
     h = imgs[0].shape[0]
@@ -483,7 +483,7 @@ def get_gabor_kernels(theta_range, sigma_range, freq_range):
 				kernels.append(kernel)
 	return kernels
 
-"""--------------------sybmission stuff------------------------------"""
+"""--------------------submission stuff------------------------------"""
 # assign a label to a patch
 def patch_to_label(patch,foreground_threshold=0.25):
     df = np.mean(patch)
@@ -497,7 +497,6 @@ def mask_to_submission_strings(image_filename):
     img_number = int(re.search(r"\d+", os.path.basename(image_filename)).group(0))
     im = mpimg.imread(image_filename)
     patch_size = 16
-    #pdb.set_trace()
     for j in range(0, im.shape[1], patch_size):
         for i in range(0, im.shape[0], patch_size):
             patch = im[i:i + patch_size, j:j + patch_size]

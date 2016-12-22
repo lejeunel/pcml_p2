@@ -1,0 +1,46 @@
+\begin{thebibliography}{1}
+
+\bibitem{achanta12}
+R.~Achanta, A.~Shaji, K.~Smith, A.~Lucchi, P.~Fua, and S.~S{\"u}sstrunk, ``Slic
+  superpixels compared to state-of-the-art superpixel methods,'' {\em IEEE
+  transactions on pattern analysis and machine intelligence}, vol.~34, no.~11,
+  pp.~2274--2282, 2012.
+
+\bibitem{fulkerson09}
+B.~Fulkerson, A.~Vedaldi, and S.~Soatto, ``Class segmentation and object
+  localization with superpixel neighborhoods,'' in {\em 2009 IEEE 12th
+  International Conference on Computer Vision}, pp.~670--677, Sept 2009.
+
+\bibitem{lowe04}
+D.~G. Lowe, ``Distinctive image features from scale-invariant keypoints,'' {\em
+  International journal of computer vision}, vol.~60, no.~2, pp.~91--110, 2004.
+
+\bibitem{2016ISPAr41B3..891L}
+Y.~{Lv}, G.~{Wang}, and X.~{Hu}, ``{Machine Learning Based Road Detection from
+  High Resolution Imagery},'' {\em ISPRS - International Archives of the
+  Photogrammetry, Remote Sensing and Spatial Information Sciences},
+  pp.~891--898, June 2016.
+
+\bibitem{canny1986computational}
+J.~Canny, ``A computational approach to edge detection,'' {\em IEEE
+  Transactions on pattern analysis and machine intelligence}, no.~6,
+  pp.~679--698, 1986.
+
+\bibitem{tsochantaridis05}
+I.~Tsochantaridis, T.~Joachims, T.~Hofmann, and Y.~Altun, ``Large margin
+  methods for structured and interdependent output variables,'' {\em Journal of
+  Machine Learning Research}, vol.~6, no.~Sep, pp.~1453--1484, 2005.
+
+\bibitem{muller14}
+A.~C. M{\"u}ller and S.~Behnke, ``Pystruct: learning structured prediction in
+  python.,'' {\em Journal of Machine Learning Research}, vol.~15, no.~1,
+  pp.~2055--2060, 2014.
+
+\bibitem{unet}
+O.~Ronneberger, P.~Fischer, and T.~Brox, ``U-net: Convolutional networks for
+  biomedical image segmentation,'' {\em arXiv preprint arXiv:1505.04597}, 2015.
+
+\bibitem{chollet2015keras}
+F.~Chollet, ``Keras.'' \url{https://github.com/fchollet/keras}, 2015.
+
+\end{thebibliography}
